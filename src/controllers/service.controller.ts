@@ -59,3 +59,43 @@ export const createService = async (req: Request, res: Response): Promise<void> 
     }
 
 };
+
+export const renewService = async (req: Request, res: Response): Promise<void> => {
+    const { serviceId } = req.params;
+    const { ttlHours } = req.body;
+
+    if (!ttlHours || ttlHours < 0.1 || ttlHours > 48) {
+        res.status(400).json({ error: "ttlHours must be between 0.1 and 48 hours" });
+        return;
+    }
+
+    try {
+        const expiresAt = new Date(Date.now() + ttlHours * 60 * 60 * 1000);
+        
+        const result = await query(
+            `UPDATE services 
+             SET expires_at = $1, status = 'ACTIVE' 
+             WHERE id = $2 
+             RETURNING *`,
+            [expiresAt, serviceId]
+        );
+
+        if (result.rows.length === 0) {
+            res.status(404).json({ error: "Service not found" });
+            return;
+        }
+
+        res.json({
+            success: true,
+            message: "Service renewed successfully",
+            data: {
+                serviceId: result.rows[0].id,
+                expiresAt: result.rows[0].expires_at,
+                status: result.rows[0].status
+            }
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+};
