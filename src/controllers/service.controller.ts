@@ -1,7 +1,8 @@
 import { type Request, type Response } from "express";
 import { z } from "zod";
 import { query } from '../db/index.js'
-
+import { scheduleCleanup } from "../../queue/cleanup.queue.js";
+import { delay } from "bullmq";
 
 // Defining validation Schema
 
@@ -27,6 +28,14 @@ export const createService = async (req: Request, res: Response): Promise<void> 
         );
 
         const newService = result.rows[0];
+
+        // Calculate delay in milliseconds
+        const delay = newService.expires_at.getTime() - Date.now();
+
+        // Schedule the Reaper 
+        if (delay > 0 ) {
+            await scheduleCleanup(newService.id, delay);
+        }
 
         // Responding to User 
         res.status(201).json({

@@ -15,6 +15,12 @@ export const validateService = async (req: Request, res: Response, next: NextFun
     try{
         const { serviceId } = req.params;
 
+        // Validate serviceId is a number
+        if (!serviceId || isNaN(Number(serviceId))) {
+            res.status(400).json({ error: "Invalid service ID" });
+            return;
+        }
+
         // Check if the service Exists
         const result = await query('SELECT * FROM services WHERE id = $1', [serviceId]);
         if(result.rows.length === 0) {
