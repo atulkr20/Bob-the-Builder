@@ -3,7 +3,6 @@ import { z } from "zod";
 import { randomBytes } from "node:crypto";
 import { query } from '../db/index.js'
 import { scheduleCleanup } from "../../queue/cleanup.queue.js";
-import { delay } from "bullmq";
 
 // Defining validation Schema
 
@@ -99,13 +98,19 @@ export const renewService = async (req: Request, res: Response): Promise<void> =
             return;
         }
 
+        const renewedService = result.rows[0];
+        const cleanupDelayMs = new Date(renewedService.expires_at).getTime() - Date.now();
+        if (cleanupDelayMs > 0) {
+            await scheduleCleanup(String(renewedService.id), cleanupDelayMs);
+        }
+
         res.json({
             success: true,
             message: "Service renewed successfully",
             data: {
-                serviceId: result.rows[0].id,
-                expiresAt: result.rows[0].expires_at,
-                status: result.rows[0].status
+                serviceId: renewedService.id,
+                expiresAt: renewedService.expires_at,
+                status: renewedService.status
             }
         });
     } catch (error) {

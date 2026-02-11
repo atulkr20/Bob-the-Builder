@@ -16,12 +16,20 @@ export const cleanupQueue = new Queue('service-cleanup', { connection });
 
 // Creating Helper function to schedule a cleanup
 
-export const scheduleCleanup = async (serviceId: string, delayMs: number) => {
-    console.log(`Scheduling Cleanup for ${serviceId} in ${delayMs/ 1000} seconds`)
+export const scheduleCleanup = async (serviceId: string | number, delayMs: number) => {
+    const serviceKey = String(serviceId);
+    const jobId = `cleanup:${serviceKey}`;
+    console.log(`Scheduling Cleanup for ${serviceKey} in ${delayMs / 1000} seconds`);
+
+    // Keep exactly one pending cleanup job per service to avoid stale destruction after renewals.
+    const existingJob = await cleanupQueue.getJob(jobId);
+    if (existingJob) {
+        await existingJob.remove();
+    }
 
     await cleanupQueue.add (
         'destroy-service',
-        { serviceId },
-        { delay: delayMs}
+        { serviceId: serviceKey },
+        { delay: delayMs, jobId, removeOnComplete: true, removeOnFail: 20 }
     );
 };

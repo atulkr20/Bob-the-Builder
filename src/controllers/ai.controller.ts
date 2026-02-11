@@ -359,7 +359,7 @@ User Request: "${prompt}"
                 },
                 liveApi: {
                     basePath: liveBasePath,
-                    meta: `${liveBasePath}/meta?token=${accessToken}`,
+                    meta: `${liveBasePath}/meta`,
                     endpoints: liveEndpoints
                 }
             }

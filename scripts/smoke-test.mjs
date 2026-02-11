@@ -23,6 +23,7 @@ const request = async (path, init = {}) => {
 };
 
 const pretty = (value) => JSON.stringify(value, null, 2);
+const deepEqual = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 
 const sampleByType = (type, fieldName, step = 1) => {
   if (type === "string") return `${fieldName}-value-${step}`;
@@ -103,7 +104,12 @@ const main = async () => {
     body: JSON.stringify(updatePayload)
   });
   assert(update.res.ok, `Update failed (${update.res.status}): ${pretty(update.data)}`);
-  assert(update.data?.data?.title === updatePayload.title, "Update title did not persist");
+  for (const field of resourceDef.fields || []) {
+    const expected = updatePayload[field.name];
+    if (expected === undefined) continue;
+    const actual = update.data?.data?.[field.name];
+    assert(deepEqual(actual, expected), `Update did not persist field "${field.name}"`);
+  }
   console.log("Update check passed");
 
   const del = await request(`/generated/${serviceId}/${resource}/${recordId}`, {

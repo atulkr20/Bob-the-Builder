@@ -44,6 +44,35 @@ This project removes that friction:
 5. Dashboard consumes these routes
 6. Worker expires/destroys services after TTL
 
+### Architecture Diagram
+
+```mermaid
+flowchart LR
+    A[Frontend Builder UI\npublic/index.html] -->|POST /ai/build| B[AI Controller]
+    B -->|Prompt->Spec| C[Gemini API]
+    B -->|Persist service + spec| D[(PostgreSQL)]
+    B -->|Generate artifacts| E[Scaffold Generator]
+    B -->|Schedule TTL cleanup| F[BullMQ Queue]
+    F --> G[Cleanup Worker]
+    G -->|Destroy expired service data| D
+
+    H[Dashboard UI\npublic/dashboard.html] -->|Token-auth CRUD| I[Generated Routes]
+    I -->|validateService + requireServiceToken + rateLimit| J[Generated Controller]
+    J -->|Read/Write JSON payload records| D
+```
+
+### Component Responsibilities
+
+| Component | Responsibility |
+| --- | --- |
+| `src/controllers/ai.controller.ts` | Converts prompts to strict backend specs, persists service metadata, returns live API contract. |
+| `src/controllers/generated.controller.ts` | Dynamic schema-aware CRUD over `service_records` from generated spec. |
+| `src/middlewares/service.middleware.ts` | Service existence + expiry/destroy checks (`410` on expired services). |
+| `src/middlewares/generated-auth.middleware.ts` | Token auth for all generated endpoints (`x-service-token`, bearer, query fallback). |
+| `src/middlewares/rate-limit.middleware.ts` | In-memory throttling to control request bursts per client and route. |
+| `queue/cleanup.queue.ts` + `queue/cleanup.worker.ts` | TTL scheduling and asynchronous cleanup/destruction lifecycle. |
+| `scripts/smoke-test.mjs` | End-to-end verification of build -> CRUD -> delete lifecycle. |
+
 ## Quick Start
 
 ### 1) Install
@@ -114,6 +143,15 @@ What it verifies:
 - update persists
 - delete works
 - record no longer present after delete
+
+## Measurable Outcomes (Current Baseline)
+
+- Generated API surface: `1` metadata endpoint + `5` CRUD endpoints per resource (`GET/POST/GET by id/PUT/DELETE`).
+- Lifecycle bounds: service TTL constrained to `0.1` to `48` hours.
+- Access control coverage: all `/generated/:serviceId/*` endpoints are token-protected.
+- Throttling baseline: `120` requests per `60` seconds per client+route bucket.
+- Cleanup scheduling guarantee: `1` pending cleanup job per service (`jobId: cleanup:<serviceId>`), rescheduled on renewal.
+- Reliability checks: smoke test enforces `7` end-to-end assertions across create/read/update/delete flow.
 
 Optional env vars:
 - `SMOKE_BASE_URL` (default: `http://localhost:5000`)
@@ -193,6 +231,13 @@ Then they will render here:
 - Added TTL-based lifecycle cleanup with BullMQ worker
 - Built operator dashboard with live CRUD and auto-generated cURL commands
 - Added automated smoke tests for end-to-end reliability checks
+
+## Suggested Resume Bullet Points
+
+- Engineered a prompt-to-backend platform that converts natural language requirements into strict, schema-validated API services.
+- Built dynamic multi-tenant CRUD runtime with per-service auth, request throttling, and TTL-based service lifecycle management.
+- Implemented asynchronous cleanup pipeline with BullMQ/Redis and idempotent rescheduling to prevent stale job execution.
+- Shipped an operator dashboard and smoke-test suite validating end-to-end service generation and data operations.
 
 ## Security Note
 

@@ -9,7 +9,8 @@
     "transpileOnly": true
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "npm run typecheck",
+    "typecheck": "tsc --noEmit",
     "db:setup": "tsx src/db/setup.ts",
     "dev": "tsx watch src/server.ts",
     "smoke:test": "node scripts/smoke-test.mjs"

@@ -1,0 +1,44 @@
+{
+  "name": "banking-system",
+  "serviceType": "crud_api",
+  "ttlHours": 0.1,
+  "description": "Backend for a banking system, managing accounts and transactions.",
+  "resources": [
+    {
+      "name": "accounts",
+      "description": "Manages customer bank accounts.",
+      "fields": [
+        {
+          "name": "id",
+          "type": "number",
+          "required": true,
+          "description": "Unique identifier for the account."
+        },
+        {
+          "name": "accountNumber",
+          "type": "string",
+          "required": true,
+          "description": "Unique identifier for the bank account."
+        },
+        {
+          "name": "customerName",
+          "type": "string",
+          "required": true,
+          "description": "Name of the account holder."
+        },
+        {
+          "name": "balance",
+          "type": "number",
+          "required": true,
+          "description": "Current balance of the account."
+        },
+        {
+          "name": "currency",
+          "type": "string",
+          "required": true,
+          "description": "Currency of the account (e.g., USD, EUR)."
+        }
+      ]
+    }
+  ]
+}
