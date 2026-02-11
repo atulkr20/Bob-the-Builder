@@ -9,9 +9,18 @@
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
         body { font-family: 'JetBrains Mono', monospace; }
         pre { white-space: pre-wrap; word-wrap: break-word; }
+        .status-pill { border: 1px solid #374151; background: #111827; padding: 6px 10px; border-radius: 8px; font-size: 12px; }
+        .tab-btn { border: 1px solid #374151; background: #111827; color: #d1d5db; padding: 8px 10px; border-radius: 8px; font-size: 12px; font-weight: 700; }
+        .tab-btn.active { border-color: #22d3ee; color: #67e8f9; background: #0b1220; }
+        .toast { border: 1px solid #374151; border-radius: 8px; padding: 10px 12px; font-size: 12px; margin-bottom: 8px; }
+        .toast.success { background: #062e1e; border-color: #14532d; color: #86efac; }
+        .toast.error { background: #3f0a0a; border-color: #7f1d1d; color: #fca5a5; }
+        .toast.info { background: #0f172a; border-color: #1e293b; color: #cbd5e1; }
+        .records-table th { position: sticky; top: 0; background: #030712; z-index: 1; }
     </style>
 </head>
 <body class="bg-gray-950 text-gray-100 min-h-screen p-6">
+    <div id="toastArea" class="fixed right-4 top-4 w-80 z-50"></div>
     <div class="max-w-6xl mx-auto flex flex-col gap-4 mb-8 border-b border-gray-800 pb-4">
         <div class="flex items-center justify-between">
             <div>
@@ -19,6 +28,12 @@
                 <p class="text-gray-500 text-sm">Use your generated API directly from this project</p>
             </div>
             <a href="/" class="text-xs text-gray-400 hover:text-white">Back to Builder</a>
+        </div>
+        <div id="statusStrip" class="grid grid-cols-2 md:grid-cols-4 gap-2">
+            <div class="status-pill">Status: <span id="statusConnected" class="text-red-300 font-bold">Disconnected</span></div>
+            <div class="status-pill">Type: <span id="statusType" class="text-white">--</span></div>
+            <div class="status-pill">Time Left: <span id="statusTtl" class="text-yellow-300 font-bold">--:--:--</span></div>
+            <div class="status-pill">Health: <span id="statusHealth" class="text-gray-300">Waiting</span></div>
         </div>
 
         <div class="flex flex-wrap gap-2">
@@ -78,27 +93,30 @@
 
     <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div class="bg-gray-900 p-6 rounded-lg border border-gray-800">
-            <h2 class="text-xl font-bold mb-4 text-purple-400">Create Record</h2>
-            <p class="text-xs text-gray-500 mb-2">JSON object for selected resource:</p>
+            <h2 class="text-xl font-bold mb-4 text-cyan-400">Record Editor</h2>
+            <div class="grid grid-cols-3 gap-2 mb-3">
+                <button id="tabCreate" class="tab-btn active" onclick="setActionMode('create')">Create</button>
+                <button id="tabUpdate" class="tab-btn" onclick="setActionMode('update')">Update</button>
+                <button id="tabDelete" class="tab-btn" onclick="setActionMode('delete')">Delete</button>
+            </div>
+            <p id="editorHint" class="text-xs text-gray-500 mb-2">JSON object for selected resource:</p>
             <textarea id="jsonInput" rows="14" class="w-full bg-black text-green-300 p-4 rounded font-mono text-sm border border-gray-700 focus:border-purple-500 outline-none">{
   "name": "example"
 }</textarea>
-            <button onclick="createRecord()" class="w-full mt-4 bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded transition">POST</button>
+            <div id="recordIdWrap" class="mt-3 hidden">
+                <input id="recordIdInput" type="number" placeholder="Record ID" class="w-full bg-gray-900 border border-gray-700 p-2 rounded text-white outline-none focus:border-yellow-500">
+            </div>
+            <button id="editorActionBtn" onclick="submitRecordAction()" class="w-full mt-4 bg-cyan-700 hover:bg-cyan-600 text-white font-bold py-3 rounded transition">POST Create</button>
         </div>
 
         <div class="lg:col-span-2 bg-gray-900 p-6 rounded-lg border border-gray-800 flex flex-col h-[72vh]">
             <div class="flex justify-between items-center mb-4">
                 <div>
                     <h2 class="text-xl font-bold text-yellow-400">Saved Data (Live)</h2>
-                    <p class="text-xs text-gray-500">This section shows real data saved through your API.</p>
-                </div>
-                <div class="flex gap-2">
-                    <input id="recordIdInput" type="number" placeholder="Record ID" class="w-28 bg-gray-900 border border-gray-700 p-2 rounded text-white outline-none focus:border-yellow-500">
-                    <button onclick="updateRecord()" class="bg-amber-600 px-3 py-2 rounded font-bold hover:bg-amber-500">PUT</button>
-                    <button onclick="deleteRecord()" class="bg-red-700 px-3 py-2 rounded font-bold hover:bg-red-600">DELETE</button>
+                    <p class="text-xs text-gray-500">Readable table view with latest records first.</p>
                 </div>
             </div>
-            <div id="recordsContainer" class="flex-1 overflow-y-auto space-y-3 pr-2">
+            <div id="recordsContainer" class="flex-1 overflow-auto pr-2">
                 <p class="text-gray-600 text-center mt-10">Connect a service to start.</p>
             </div>
         </div>
@@ -110,6 +128,9 @@
         let meta = null;
         let copyTimer = null;
         let isConnected = false;
+        let ttlInterval = null;
+        let currentExpiresAt = null;
+        let actionMode = 'create';
 
         const params = new URLSearchParams(window.location.search);
         const initialId = params.get('id');
@@ -124,11 +145,66 @@
             connectService();
         }
 
+        function showToast(message, type = 'info') {
+            const area = document.getElementById('toastArea');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            area.appendChild(toast);
+            setTimeout(() => {
+                toast.remove();
+            }, 2600);
+        }
+
+        function formatDuration(ms) {
+            const safe = Math.max(0, Math.floor(ms / 1000));
+            const hours = Math.floor(safe / 3600);
+            const minutes = Math.floor((safe % 3600) / 60);
+            const seconds = safe % 60;
+            return [hours, minutes, seconds].map((v) => String(v).padStart(2, '0')).join(':');
+        }
+
+        function stopCountdown() {
+            if (ttlInterval) {
+                clearInterval(ttlInterval);
+                ttlInterval = null;
+            }
+        }
+
+        function startCountdown(expiresAt) {
+            stopCountdown();
+            currentExpiresAt = expiresAt ? new Date(expiresAt).getTime() : null;
+
+            if (!currentExpiresAt || Number.isNaN(currentExpiresAt)) {
+                document.getElementById('statusTtl').textContent = '--:--:--';
+                return;
+            }
+
+            const tick = () => {
+                const remainingMs = currentExpiresAt - Date.now();
+                const remainingText = formatDuration(remainingMs);
+                document.getElementById('statusTtl').textContent = remainingText;
+                if (remainingMs <= 0) {
+                    stopCountdown();
+                    disconnectState('Service expired or destroyed');
+                }
+            };
+
+            tick();
+            ttlInterval = setInterval(tick, 1000);
+        }
+
         async function connectService() {
             const serviceId = document.getElementById('serviceId').value.trim();
             const token = document.getElementById('serviceToken').value.trim();
-            if (!serviceId) return alert('Enter a service ID first');
-            if (!token) return alert('Enter service token');
+            if (!serviceId) {
+                showToast('Enter a service ID first', 'error');
+                return;
+            }
+            if (!token) {
+                showToast('Enter service token', 'error');
+                return;
+            }
 
             const res = await fetch(`/generated/${serviceId}/meta`, {
                 headers: { 'x-service-token': token }
@@ -136,7 +212,7 @@
             const data = await res.json();
             if (!res.ok || !data.success) {
                 disconnectState(data.message || data.error || 'Service unavailable or expired');
-                alert(data.message || data.error || 'Failed to load generated service metadata');
+                showToast(data.message || data.error || 'Failed to load generated service metadata', 'error');
                 return;
             }
 
@@ -158,20 +234,36 @@
                 <div>Service: <span class="text-white">${data.name}</span></div>
                 <div>Type: <span class="text-white">${data.serviceType}</span></div>
                 <div>Description: <span class="text-white">${data.description}</span></div>
+                <div>Expires At: <span class="text-white">${new Date(data.expiresAt).toLocaleString()}</span></div>
                 <div>Base API: <span class="text-white">/generated/${serviceId}</span></div>
                 <div>Token: <span class="text-white">${token}</span></div>
             `;
+            document.getElementById('statusConnected').textContent = 'Connected';
+            document.getElementById('statusConnected').className = 'text-emerald-300 font-bold';
+            document.getElementById('statusType').textContent = data.serviceType || '--';
+            document.getElementById('statusHealth').textContent = 'Healthy';
+            document.getElementById('statusHealth').className = 'text-emerald-300';
 
+            startCountdown(data.expiresAt);
             suggestPayload();
             refreshCurlPanel();
             await loadRecords();
+            showToast('Service connected', 'success');
         }
 
         function disconnectState(reason) {
+            stopCountdown();
+            currentExpiresAt = null;
             currentServiceId = null;
             currentToken = '';
             meta = null;
             isConnected = false;
+            document.getElementById('statusConnected').textContent = 'Disconnected';
+            document.getElementById('statusConnected').className = 'text-red-300 font-bold';
+            document.getElementById('statusType').textContent = '--';
+            document.getElementById('statusTtl').textContent = '--:--:--';
+            document.getElementById('statusHealth').textContent = 'Unavailable';
+            document.getElementById('statusHealth').className = 'text-red-300';
             document.getElementById('resourceSelect').innerHTML = '';
             document.getElementById('metaBox').innerHTML = `<span class="text-red-400">${reason}</span>`;
             document.getElementById('recordsContainer').innerHTML =
@@ -179,10 +271,61 @@
             refreshCurlPanel();
         }
 
+        function setActionMode(mode) {
+            actionMode = mode;
+            const tabs = {
+                create: document.getElementById('tabCreate'),
+                update: document.getElementById('tabUpdate'),
+                delete: document.getElementById('tabDelete')
+            };
+            Object.entries(tabs).forEach(([key, el]) => {
+                if (key === mode) el.classList.add('active');
+                else el.classList.remove('active');
+            });
+
+            const recordIdWrap = document.getElementById('recordIdWrap');
+            const jsonInput = document.getElementById('jsonInput');
+            const actionBtn = document.getElementById('editorActionBtn');
+            const hint = document.getElementById('editorHint');
+
+            if (mode === 'create') {
+                recordIdWrap.classList.add('hidden');
+                jsonInput.classList.remove('opacity-60');
+                actionBtn.textContent = 'POST Create';
+                actionBtn.className = 'w-full mt-4 bg-cyan-700 hover:bg-cyan-600 text-white font-bold py-3 rounded transition';
+                hint.textContent = 'JSON object for selected resource:';
+            } else if (mode === 'update') {
+                recordIdWrap.classList.remove('hidden');
+                jsonInput.classList.remove('opacity-60');
+                actionBtn.textContent = 'PUT Update';
+                actionBtn.className = 'w-full mt-4 bg-amber-700 hover:bg-amber-600 text-white font-bold py-3 rounded transition';
+                hint.textContent = 'Enter Record ID and JSON fields to update:';
+            } else {
+                recordIdWrap.classList.remove('hidden');
+                jsonInput.classList.add('opacity-60');
+                actionBtn.textContent = 'DELETE Record';
+                actionBtn.className = 'w-full mt-4 bg-red-700 hover:bg-red-600 text-white font-bold py-3 rounded transition';
+                hint.textContent = 'Enter Record ID to delete (JSON not used):';
+            }
+            refreshCurlPanel();
+        }
+
+        async function submitRecordAction() {
+            if (actionMode === 'create') {
+                await createRecord();
+                return;
+            }
+            if (actionMode === 'update') {
+                await updateRecord();
+                return;
+            }
+            await deleteRecord();
+        }
+
         function getSelectedResource() {
             const resource = document.getElementById('resourceSelect').value;
             if (!currentServiceId || !resource) {
-                alert('Connect and select a resource first');
+                showToast('Connect and select a resource first', 'error');
                 return null;
             }
             return resource;
@@ -264,6 +407,7 @@
 
             const status = document.getElementById('copyStatus');
             status.textContent = `Copied: ${elementId}`;
+            showToast(`Copied ${elementId}`, 'success');
             clearTimeout(copyTimer);
             copyTimer = setTimeout(() => {
                 status.textContent = '';
@@ -278,7 +422,7 @@
             try {
                 payload = JSON.parse(document.getElementById('jsonInput').value);
             } catch {
-                alert('Invalid JSON payload');
+                showToast('Invalid JSON payload', 'error');
                 return;
             }
 
@@ -292,13 +436,14 @@
                 if (res.status === 404 || res.status === 410) {
                     disconnectState(data.message || data.error || 'Service expired or destroyed');
                 }
-                alert(data.error || 'Create failed');
+                showToast(data.error || 'Create failed', 'error');
                 return;
             }
 
             document.getElementById('recordIdInput').value = data.data?.id || '';
             refreshCurlPanel();
             await loadRecords();
+            showToast('Record created', 'success');
         }
 
         async function loadRecords() {
@@ -318,23 +463,54 @@
                     return;
                 }
                 container.innerHTML = `<p class="text-red-400">${data.error || 'Failed to load records'}</p>`;
+                document.getElementById('statusHealth').textContent = 'Degraded';
+                document.getElementById('statusHealth').className = 'text-yellow-300';
                 return;
             }
+            document.getElementById('statusHealth').textContent = 'Healthy';
+            document.getElementById('statusHealth').className = 'text-emerald-300';
 
             if (!data.data || data.data.length === 0) {
                 container.innerHTML = '<p class="text-gray-600 text-center mt-10">No records found.</p>';
                 return;
             }
 
-            data.data.forEach((record) => {
-                const card = document.createElement('div');
-                card.className = 'bg-black border border-gray-700 p-4 rounded hover:border-yellow-500 transition';
-                card.innerHTML = `
-                    <div class="text-xs text-gray-500 mb-2">ID ${record.id}</div>
-                    <pre class="text-sm text-blue-300 overflow-x-auto">${JSON.stringify(record, null, 2)}</pre>
+            const rows = data.data.map((record) => {
+                const payload = { ...record };
+                delete payload.id;
+                const created = record.createdAt ? new Date(record.createdAt).toLocaleTimeString() : '--';
+                const updated = record.updatedAt ? new Date(record.updatedAt).toLocaleTimeString() : '--';
+                return `
+                    <tr class="border-b border-gray-800 hover:bg-gray-900/50 cursor-pointer" onclick="selectRecord(${record.id})">
+                        <td class="px-3 py-2 text-cyan-300">${record.id}</td>
+                        <td class="px-3 py-2 text-gray-300">${created}</td>
+                        <td class="px-3 py-2 text-gray-300">${updated}</td>
+                        <td class="px-3 py-2 text-blue-300"><pre class="text-xs overflow-x-auto">${JSON.stringify(payload, null, 2)}</pre></td>
+                    </tr>
                 `;
-                container.appendChild(card);
-            });
+            }).join('');
+
+            container.innerHTML = `
+                <table class="records-table w-full text-xs border border-gray-800 rounded overflow-hidden">
+                    <thead>
+                        <tr class="text-left text-gray-400 border-b border-gray-800">
+                            <th class="px-3 py-2 w-16">ID</th>
+                            <th class="px-3 py-2 w-28">Created</th>
+                            <th class="px-3 py-2 w-28">Updated</th>
+                            <th class="px-3 py-2">Payload</th>
+                        </tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
+                </table>
+            `;
+        }
+
+        function selectRecord(id) {
+            document.getElementById('recordIdInput').value = id;
+            if (actionMode === 'create') {
+                setActionMode('update');
+            }
+            refreshCurlPanel();
         }
 
         async function updateRecord() {
@@ -342,13 +518,16 @@
             if (!resource) return;
 
             const recordId = document.getElementById('recordIdInput').value.trim();
-            if (!recordId) return alert('Enter record ID for update');
+            if (!recordId) {
+                showToast('Enter record ID for update', 'error');
+                return;
+            }
 
             let payload;
             try {
                 payload = JSON.parse(document.getElementById('jsonInput').value);
             } catch {
-                alert('Invalid JSON payload');
+                showToast('Invalid JSON payload', 'error');
                 return;
             }
 
@@ -362,11 +541,12 @@
                 if (res.status === 404 || res.status === 410) {
                     disconnectState(data.message || data.error || 'Service expired or destroyed');
                 }
-                alert(data.error || 'Update failed');
+                showToast(data.error || 'Update failed', 'error');
                 return;
             }
             refreshCurlPanel();
             await loadRecords();
+            showToast('Record updated', 'success');
         }
 
         async function deleteRecord() {
@@ -374,7 +554,10 @@
             if (!resource) return;
 
             const recordId = document.getElementById('recordIdInput').value.trim();
-            if (!recordId) return alert('Enter record ID for delete');
+            if (!recordId) {
+                showToast('Enter record ID for delete', 'error');
+                return;
+            }
 
             const res = await fetch(`/generated/${currentServiceId}/${resource}/${recordId}`, {
                 method: 'DELETE',
@@ -385,11 +568,12 @@
                 if (res.status === 404 || res.status === 410) {
                     disconnectState(data.message || data.error || 'Service expired or destroyed');
                 }
-                alert(data.error || 'Delete failed');
+                showToast(data.error || 'Delete failed', 'error');
                 return;
             }
             refreshCurlPanel();
             await loadRecords();
+            showToast('Record deleted', 'success');
         }
 
         document.getElementById('resourceSelect').addEventListener('change', () => {
@@ -400,6 +584,7 @@
         document.getElementById('recordIdInput').addEventListener('input', refreshCurlPanel);
         document.getElementById('serviceId').addEventListener('input', refreshCurlPanel);
         document.getElementById('serviceToken').addEventListener('input', refreshCurlPanel);
+        setActionMode('create');
         refreshCurlPanel();
     </script>
 </body>

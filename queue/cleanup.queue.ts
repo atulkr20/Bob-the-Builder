@@ -18,7 +18,7 @@ export const cleanupQueue = new Queue('service-cleanup', { connection });
 
 export const scheduleCleanup = async (serviceId: string | number, delayMs: number) => {
     const serviceKey = String(serviceId);
-    const jobId = `cleanup:${serviceKey}`;
+    const jobId = `cleanup-${serviceKey}`;
     console.log(`Scheduling Cleanup for ${serviceKey} in ${delayMs / 1000} seconds`);
 
     // Keep exactly one pending cleanup job per service to avoid stale destruction after renewals.

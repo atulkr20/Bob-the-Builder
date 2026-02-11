@@ -1,0 +1,32 @@
+{
+  "name": "BankingSystem",
+  "serviceType": "crud_api",
+  "ttlHours": 24,
+  "description": "API for banking transactions",
+  "resources": [
+    {
+      "name": "transaction",
+      "description": "Records a banking transaction",
+      "fields": [
+        {
+          "name": "transaction_id",
+          "type": "string",
+          "required": true,
+          "description": "Unique transaction identifier"
+        },
+        {
+          "name": "amount",
+          "type": "number",
+          "required": true,
+          "description": "Transaction amount"
+        },
+        {
+          "name": "timestamp",
+          "type": "string",
+          "required": true,
+          "description": "Transaction timestamp"
+        }
+      ]
+    }
+  ]
+}

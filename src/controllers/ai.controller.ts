@@ -28,7 +28,7 @@ type GoogleModel = {
 const aiSpecSchema = z.object({
     name: z.string().min(3),
     serviceType: z.enum(ALLOWED_SERVICE_TYPES),
-    ttlHours: z.number().min(0.1).max(48),
+    ttlHours: z.number().min(1 / 60).max(48),
     description: z.string().min(10),
     resources: z
         .array(
@@ -71,6 +71,26 @@ const listGenerateContentModels = async (apiKey: string): Promise<string[]> => {
 };
 
 const unique = (items: string[]): string[] => [...new Set(items.filter(Boolean))];
+const clampTtlHours = (value: number): number => Math.min(48, Math.max(1 / 60, value));
+
+const parseExplicitTtlHours = (prompt: string): number | null => {
+    const normalized = prompt.toLowerCase();
+    const patterns: Array<{ regex: RegExp; toHours: (value: number) => number }> = [
+        { regex: /(\d+(?:\.\d+)?)\s*(?:min|mins|minute|minutes)\b/, toHours: (value) => value / 60 },
+        { regex: /(\d+(?:\.\d+)?)\s*(?:hr|hrs|hour|hours)\b/, toHours: (value) => value },
+        { regex: /(\d+(?:\.\d+)?)\s*(?:day|days)\b/, toHours: (value) => value * 24 }
+    ];
+
+    for (const { regex, toHours } of patterns) {
+        const match = normalized.match(regex);
+        if (!match) continue;
+        const numeric = Number(match[1]);
+        if (!Number.isFinite(numeric) || numeric <= 0) continue;
+        return clampTtlHours(toHours(numeric));
+    }
+
+    return null;
+};
 
 const inferServiceTypeFromPrompt = (prompt: string): ServiceType => {
     if (/iot|sensor|telemetry|device|metrics|logger/i.test(prompt)) return "iot_logger";
@@ -83,12 +103,14 @@ const inferServiceTypeFromPrompt = (prompt: string): ServiceType => {
 
 const inferFallbackSpec = (prompt: string): BackendSpec => {
     const serviceType = inferServiceTypeFromPrompt(prompt);
+    const promptTtlHours = parseExplicitTtlHours(prompt);
+    const fallbackTtlHours = promptTtlHours ?? 2;
 
     const fallbackByType: Record<ServiceType, BackendSpec> = {
         chat: {
             name: "ephemeral-chat-service",
             serviceType,
-            ttlHours: 2,
+            ttlHours: fallbackTtlHours,
             description: "Temporary chat backend with message records.",
             resources: [
                 {
@@ -104,7 +126,7 @@ const inferFallbackSpec = (prompt: string): BackendSpec => {
         notes: {
             name: "ephemeral-notes-service",
             serviceType,
-            ttlHours: 2,
+            ttlHours: fallbackTtlHours,
             description: "Temporary notes backend with simple entries.",
             resources: [
                 {
@@ -121,7 +143,7 @@ const inferFallbackSpec = (prompt: string): BackendSpec => {
         qa: {
             name: "ephemeral-qa-service",
             serviceType,
-            ttlHours: 2,
+            ttlHours: fallbackTtlHours,
             description: "Temporary Q&A backend to store questions and answers.",
             resources: [
                 {
@@ -137,7 +159,7 @@ const inferFallbackSpec = (prompt: string): BackendSpec => {
         iot_logger: {
             name: "iot-device-logger",
             serviceType,
-            ttlHours: 2,
+            ttlHours: fallbackTtlHours,
             description: "Temporary IoT logger to ingest telemetry events.",
             resources: [
                 {
@@ -154,7 +176,7 @@ const inferFallbackSpec = (prompt: string): BackendSpec => {
         crud_api: {
             name: "custom-crud-api",
             serviceType,
-            ttlHours: 2,
+            ttlHours: fallbackTtlHours,
             description: "Temporary CRUD API generated from prompt intent.",
             resources: [
                 {
@@ -170,7 +192,7 @@ const inferFallbackSpec = (prompt: string): BackendSpec => {
         webhook_receiver: {
             name: "webhook-receiver",
             serviceType,
-            ttlHours: 2,
+            ttlHours: fallbackTtlHours,
             description: "Temporary webhook receiver backend.",
             resources: [
                 {
@@ -190,6 +212,7 @@ const inferFallbackSpec = (prompt: string): BackendSpec => {
 };
 
 const normalizeSpec = (raw: unknown, prompt: string): BackendSpec => {
+    const explicitTtlHours = parseExplicitTtlHours(prompt);
     const parseResult = aiSpecSchema.safeParse(raw);
 
     if (!parseResult.success) {
@@ -221,7 +244,7 @@ const normalizeSpec = (raw: unknown, prompt: string): BackendSpec => {
     return {
         name: parseResult.data.name,
         serviceType: parseResult.data.serviceType,
-        ttlHours: parseResult.data.ttlHours,
+        ttlHours: explicitTtlHours ?? parseResult.data.ttlHours,
         description: parseResult.data.description,
         resources: cleanedResources
     };
@@ -243,10 +266,11 @@ You are a backend architect. Analyze user request and output strict JSON only.
 Rules:
 1) Decide serviceType from enum: "chat", "notes", "qa", "iot_logger", "crud_api", "webhook_receiver".
 2) Return a concise kebab-case project name.
-3) ttlHours must be number between 0.1 and 48.
-4) resources must contain at least one resource and each resource must contain fields.
-5) field.type must be one of: "string", "number", "boolean", "object".
-6) No markdown. JSON only.
+3) ttlHours must be number between 0.0167 and 48.
+4) If user specifies minutes (example: "5 min"), convert exactly to hours (example: 0.0833).
+5) resources must contain at least one resource and each resource must contain fields.
+6) field.type must be one of: "string", "number", "boolean", "object".
+7) No markdown. JSON only.
 
 Preferred serviceType hint for this prompt: "${inferredType}".
 

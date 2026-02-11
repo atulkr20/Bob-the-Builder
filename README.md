@@ -147,7 +147,7 @@ What it verifies:
 ## Measurable Outcomes (Current Baseline)
 
 - Generated API surface: `1` metadata endpoint + `5` CRUD endpoints per resource (`GET/POST/GET by id/PUT/DELETE`).
-- Lifecycle bounds: service TTL constrained to `0.1` to `48` hours.
+- Lifecycle bounds: service TTL constrained to `0.0167` to `48` hours (about `1 min` to `48 hrs`).
 - Access control coverage: all `/generated/:serviceId/*` endpoints are token-protected.
 - Throttling baseline: `120` requests per `60` seconds per client+route bucket.
 - Cleanup scheduling guarantee: `1` pending cleanup job per service (`jobId: cleanup:<serviceId>`), rescheduled on renewal.

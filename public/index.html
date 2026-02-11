@@ -43,6 +43,10 @@
         </ol>
     </div>
 
+    <div id="buildTimer" class="w-full max-w-2xl mt-4 hidden bg-gray-900 border border-gray-700 rounded-lg p-3 text-sm">
+        Service countdown: <span id="buildTimerValue" class="text-yellow-300 font-bold">--:--:--</span>
+    </div>
+
     <div id="terminal" class="w-full max-w-2xl mt-8 hidden">
         <div class="bg-black rounded-lg border border-gray-800 p-4 font-mono text-sm h-64 overflow-y-auto">
             <div id="logs" class="space-y-2"></div>
@@ -53,6 +57,46 @@
         const form = document.getElementById('aiForm');
         const logs = document.getElementById('logs');
         const terminal = document.getElementById('terminal');
+        const buildTimer = document.getElementById('buildTimer');
+        const buildTimerValue = document.getElementById('buildTimerValue');
+        let buildTimerInterval = null;
+
+        function formatDuration(ms) {
+            const safe = Math.max(0, Math.floor(ms / 1000));
+            const hours = Math.floor(safe / 3600);
+            const minutes = Math.floor((safe % 3600) / 60);
+            const seconds = safe % 60;
+            return [hours, minutes, seconds].map((v) => String(v).padStart(2, '0')).join(':');
+        }
+
+        function stopBuildTimer() {
+            if (buildTimerInterval) {
+                clearInterval(buildTimerInterval);
+                buildTimerInterval = null;
+            }
+        }
+
+        function startBuildTimer(expiresAt) {
+            stopBuildTimer();
+            const expiresAtMs = new Date(expiresAt).getTime();
+            if (!expiresAt || Number.isNaN(expiresAtMs)) {
+                buildTimer.classList.add('hidden');
+                buildTimerValue.textContent = '--:--:--';
+                return;
+            }
+
+            buildTimer.classList.remove('hidden');
+            const tick = () => {
+                const remainingMs = expiresAtMs - Date.now();
+                buildTimerValue.textContent = formatDuration(remainingMs);
+                if (remainingMs <= 0) {
+                    stopBuildTimer();
+                }
+            };
+
+            tick();
+            buildTimerInterval = setInterval(tick, 1000);
+        }
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -84,6 +128,7 @@
                     log(`> SERVICE TYPE: <span class="text-white">${serviceType}</span>`);
                     log(`> ACCESS TOKEN: <span class="text-white">${accessToken}</span>`);
                     log(`> EXPIRES AT: ${new Date(data.data.expiresAt).toLocaleTimeString()}`);
+                    startBuildTimer(data.data.expiresAt);
                     log(`> LIVE META: <span class="text-white">${liveApi.meta}</span>`);
                     (liveApi.endpoints || []).slice(0, 8).forEach((endpoint) => {
                         log(`> LIVE API: ${endpoint.method} ${endpoint.path}`, 'text-emerald-300');

@@ -111,6 +111,7 @@ export const getGeneratedMeta = async (req: Request, res: Response): Promise<voi
         serviceType: req.service?.service_type,
         name: spec.name,
         description: spec.description,
+        expiresAt: req.service?.expires_at,
         resources
     });
 };

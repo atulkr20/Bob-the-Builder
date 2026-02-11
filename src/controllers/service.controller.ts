@@ -9,7 +9,7 @@ import { scheduleCleanup } from "../../queue/cleanup.queue.js";
 const createServiceSchema = z.object({
     name: z.string().min(3, "Name must be at least 3 chars"),
     serviceType: z.enum(["chat", "notes", "qa", "iot_logger", "crud_api", "webhook_receiver"]).default("crud_api"),
-    ttlHours: z.number().min(0.1).max(48, "TTL must be between 0.1 and  48 hours")
+    ttlHours: z.number().min(1 / 60).max(48, "TTL must be between 0.0167 and 48 hours")
 });
 
 export const createService = async (req: Request, res: Response): Promise<void> => {
@@ -77,8 +77,8 @@ export const renewService = async (req: Request, res: Response): Promise<void> =
     const { serviceId } = req.params;
     const { ttlHours } = req.body;
 
-    if (!ttlHours || ttlHours < 0.1 || ttlHours > 48) {
-        res.status(400).json({ error: "ttlHours must be between 0.1 and 48 hours" });
+    if (!ttlHours || ttlHours < 1 / 60 || ttlHours > 48) {
+        res.status(400).json({ error: "ttlHours must be between 0.0167 and 48 hours" });
         return;
     }
 
