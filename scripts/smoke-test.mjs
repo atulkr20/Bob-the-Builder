@@ -44,10 +44,16 @@ const main = async () => {
   assert(build.data?.success, `Build response invalid: ${pretty(build.data)}`);
 
   const serviceId = build.data?.data?.serviceId;
+  const accessToken = build.data?.data?.accessToken;
   assert(serviceId, "Missing serviceId in build response");
+  assert(accessToken, "Missing accessToken in build response");
   console.log(`Service created: ${serviceId}`);
 
-  const meta = await request(`/generated/${serviceId}/meta`);
+  const authHeaders = { "x-service-token": accessToken };
+
+  const meta = await request(`/generated/${serviceId}/meta`, {
+    headers: authHeaders
+  });
   assert(meta.res.ok, `Meta failed (${meta.res.status}): ${pretty(meta.data)}`);
   assert(meta.data?.success, `Meta response invalid: ${pretty(meta.data)}`);
   assert(Array.isArray(meta.data?.resources) && meta.data.resources.length > 0, "No resources in meta");
@@ -71,7 +77,7 @@ const main = async () => {
 
   const create = await request(`/generated/${serviceId}/${resource}`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...authHeaders },
     body: JSON.stringify(createPayload)
   });
   assert(create.res.ok, `Create failed (${create.res.status}): ${pretty(create.data)}`);
@@ -81,7 +87,7 @@ const main = async () => {
   assert(recordId, "Missing record id after create");
   console.log(`Record created: ${recordId}`);
 
-  const list = await request(`/generated/${serviceId}/${resource}`);
+  const list = await request(`/generated/${serviceId}/${resource}`, { headers: authHeaders });
   assert(list.res.ok, `List failed (${list.res.status}): ${pretty(list.data)}`);
   assert(Array.isArray(list.data?.data), `List response invalid: ${pretty(list.data)}`);
   assert(list.data.data.some((item) => item.id === recordId), "Created record not found in list");
@@ -93,7 +99,7 @@ const main = async () => {
   }
   const update = await request(`/generated/${serviceId}/${resource}/${recordId}`, {
     method: "PUT",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...authHeaders },
     body: JSON.stringify(updatePayload)
   });
   assert(update.res.ok, `Update failed (${update.res.status}): ${pretty(update.data)}`);
@@ -101,13 +107,14 @@ const main = async () => {
   console.log("Update check passed");
 
   const del = await request(`/generated/${serviceId}/${resource}/${recordId}`, {
-    method: "DELETE"
+    method: "DELETE",
+    headers: authHeaders
   });
   assert(del.res.ok, `Delete failed (${del.res.status}): ${pretty(del.data)}`);
   assert(del.data?.success, `Delete response invalid: ${pretty(del.data)}`);
   console.log("Delete check passed");
 
-  const listAfterDelete = await request(`/generated/${serviceId}/${resource}`);
+  const listAfterDelete = await request(`/generated/${serviceId}/${resource}`, { headers: authHeaders });
   assert(listAfterDelete.res.ok, `Post-delete list failed (${listAfterDelete.res.status})`);
   assert(
     !listAfterDelete.data?.data?.some((item) => item.id === recordId),

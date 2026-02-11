@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { validateService } from "../middlewares/service.middleware.js";
 import { requireServiceToken } from "../middlewares/generated-auth.middleware.js";
+import { createRateLimiter } from "../middlewares/rate-limit.middleware.js";
 import {
     createGeneratedRecord,
     deleteGeneratedRecord,
@@ -12,6 +13,7 @@ import {
 
 const router = Router({ mergeParams: true });
 
+router.use(createRateLimiter(120, 60 * 1000));
 router.use(validateService);
 router.use(requireServiceToken);
 router.get("/meta", getGeneratedMeta);
