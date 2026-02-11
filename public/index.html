@@ -3,151 +3,86 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bob the Builder // Ephemeral Infrastructure</title>
+    <title>Bob the Builder // AI Architect</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
         body { font-family: 'JetBrains Mono', monospace; }
-        .terminal-text { color: #4ade80; text-shadow: 0 0 5px #4ade80; }
+        .glow { box-shadow: 0 0 15px rgba(74, 222, 128, 0.5); }
     </style>
 </head>
-<body class="bg-gray-900 text-gray-100 h-screen flex flex-col items-center justify-center p-4">
+<body class="bg-gray-950 text-gray-100 h-screen flex flex-col items-center justify-center p-4">
 
-    <div class="mb-8 text-center">
-        <h1 class="text-4xl font-bold terminal-text mb-2">Bob the Builder 🚜</h1>
-        <p class="text-gray-400">Ephemeral Backend Infrastructure Platform</p>
+    <div class="mb-10 text-center">
+        <h1 class="text-5xl font-bold text-green-400 mb-2">Bob the Builder 🤖</h1>
+        <p class="text-gray-500">AI-Powered Ephemeral Infrastructure</p>
     </div>
 
-    <div class="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-8">
-        
-        <div class="bg-gray-800 p-6 rounded-lg border border-gray-700 shadow-lg">
-            <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
-                <span>🛠️</span> Build New Service
-            </h2>
-            
-            <form id="createForm" class="space-y-4">
-                <div>
-                    <label class="block text-sm text-gray-400 mb-1">Service Name</label>
-                    <input type="text" id="serviceName" placeholder="my-temp-chat" 
-                        class="w-full bg-gray-900 border border-gray-700 rounded p-2 focus:border-green-500 outline-none text-white">
-                </div>
-                <div>
-                    <label class="block text-sm text-gray-400 mb-1">TTL (Hours)</label>
-                    <input type="number" id="ttlHours" placeholder="2" step="0.1"
-                        class="w-full bg-gray-900 border border-gray-700 rounded p-2 focus:border-green-500 outline-none text-white">
-                </div>
-                <button type="submit" 
-                    class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition duration-200">
-                    Deploy Infrastructure 🚀
+    <div class="w-full max-w-2xl">
+        <div class="bg-gray-900 p-1 rounded-lg border border-gray-700 glow transition-all focus-within:border-green-500">
+            <form id="aiForm" class="flex items-center">
+                <span class="pl-4 text-green-500 text-xl">❯</span>
+                <input type="text" id="promptInput" 
+                    placeholder="Describe what you need... (e.g., 'A burner chat server for 10 mins')" 
+                    class="w-full bg-transparent p-4 outline-none text-white placeholder-gray-600" autocomplete="off">
+                <button type="submit" id="buildBtn"
+                    class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-md font-bold mr-2 transition">
+                    BUILD
                 </button>
             </form>
-
-            <div id="resultArea" class="mt-6 hidden">
-                <p class="text-sm text-gray-400 mb-2">Deployment Successful:</p>
-                <div class="bg-black p-4 rounded border border-gray-700 relative group">
-                    <pre id="jsonResult" class="text-xs text-green-400 overflow-x-auto"></pre>
-                    <button onclick="copyToClipboard()" class="absolute top-2 right-2 text-gray-500 hover:text-white text-xs">Copy</button>
-                </div>
-            </div>
         </div>
+        <p class="text-xs text-gray-600 mt-2 text-center">Powered by Google Gemini • Auto-destructs on timer</p>
+    </div>
 
-        <div class="bg-gray-800 p-6 rounded-lg border border-gray-700 shadow-lg flex flex-col">
-            <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
-                <span>📟</span> Live Test Console
-            </h2>
-            <div class="flex-1 bg-black rounded p-4 font-mono text-sm overflow-y-auto h-64 border border-gray-700" id="consoleLogs">
-                <p class="text-gray-500">> System initialized...</p>
-                <p class="text-gray-500">> Waiting for deployment...</p>
-            </div>
-            
-            <div class="mt-4 flex gap-2">
-                <input type="text" id="testMessage" placeholder="Send a test message..." disabled
-                    class="flex-1 bg-gray-900 border border-gray-700 rounded p-2 outline-none text-white disabled:opacity-50">
-                <button id="sendBtn" disabled onclick="sendMessage()"
-                    class="bg-blue-600 hover:bg-blue-700 text-white px-4 rounded disabled:opacity-50 disabled:cursor-not-allowed">
-                    Send
-                </button>
-            </div>
+    <div id="terminal" class="w-full max-w-2xl mt-8 hidden">
+        <div class="bg-black rounded-lg border border-gray-800 p-4 font-mono text-sm h-64 overflow-y-auto">
+            <div id="logs" class="space-y-2"></div>
         </div>
     </div>
 
     <script>
-        let currentServiceId = null;
+        const form = document.getElementById('aiForm');
+        const logs = document.getElementById('logs');
+        const terminal = document.getElementById('terminal');
 
-        document.getElementById('createForm').addEventListener('submit', async (e) => {
+        form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const name = document.getElementById('serviceName').value;
-            const ttl = document.getElementById('ttlHours').value;
+            const prompt = document.getElementById('promptInput').value;
+            if(!prompt) return;
 
-            log(`> Deploying service: ${name} (${ttl}h)...`);
+            terminal.classList.remove('hidden');
+            log(`user@host:~$ ${prompt}`);
+            log(`> Analyzing request with Gemini AI...`, 'text-yellow-500');
 
             try {
-                const res = await fetch('/services', {
+                const res = await fetch('/ai/build', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, ttlHours: Number(ttl) })
+                    body: JSON.stringify({ prompt })
                 });
                 const data = await res.json();
 
                 if (data.success) {
-                    currentServiceId = data.data.serviceId;
-                    
-                    // Show Result
-                    document.getElementById('resultArea').classList.remove('hidden');
-                    document.getElementById('jsonResult').textContent = JSON.stringify(data, null, 2);
-                    
-                    // Enable Test Console
-                    document.getElementById('testMessage').disabled = false;
-                    document.getElementById('sendBtn').disabled = false;
-                    
-                    log(`> Service Deployed! ID: ${currentServiceId}`);
-                    log(`> Auto-destruction scheduled for: ${new Date(data.data.expiresAt).toLocaleTimeString()}`);
+                    log(`> [AI]: ${data.aiResponse}`, 'text-blue-400');
+                    log(`> --------------------------------`, 'text-gray-600');
+                    log(`> INFRASTRUCTURE DEPLOYED SUCCESSFULLY`, 'text-green-500 font-bold');
+                    log(`> SERVICE ID: ${data.data.serviceId}`);
+                    log(`> EXPIRES AT: ${new Date(data.data.expiresAt).toLocaleTimeString()}`);
+                    log(`> ENDPOINT: POST /${data.data.serviceId}/message`);
                 } else {
-                    log(`> Error: ${JSON.stringify(data.error)}`, 'text-red-500');
+                    log(`> Error: ${data.error}`, 'text-red-500');
                 }
             } catch (err) {
-                log(`> Network Error: ${err.message}`, 'text-red-500');
+                log(`> Connection Failed.`, 'text-red-500');
             }
         });
 
-        async function sendMessage() {
-            const text = document.getElementById('testMessage').value;
-            if (!text || !currentServiceId) return;
-
-            log(`> Sending message to ${currentServiceId}...`);
-
-            try {
-                const res = await fetch(`/${currentServiceId}/message`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ text })
-                });
-                const data = await res.json();
-
-                if (data.success) {
-                    log(`> [201 OK] Message saved: "${text}"`, 'text-green-400');
-                    document.getElementById('testMessage').value = '';
-                } else {
-                    log(`> [Error] ${data.error}`, 'text-red-500');
-                }
-            } catch (err) {
-                log(`> Failed to connect.`, 'text-red-500');
-            }
-        }
-
         function log(msg, colorClass = 'text-gray-300') {
-            const logs = document.getElementById('consoleLogs');
-            const p = document.createElement('p');
-            p.textContent = msg;
-            p.className = `${colorClass} mb-1`;
-            logs.appendChild(p);
+            const div = document.createElement('div');
+            div.textContent = msg;
+            div.className = colorClass;
+            logs.appendChild(div);
             logs.scrollTop = logs.scrollHeight;
-        }
-
-        function copyToClipboard() {
-            const text = document.getElementById('jsonResult').textContent;
-            navigator.clipboard.writeText(text);
-            alert("Copied JSON!");
         }
     </script>
 </body>
