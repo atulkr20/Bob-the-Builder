@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bob Live API Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
+        body { font-family: 'JetBrains Mono', monospace; }
+        pre { white-space: pre-wrap; word-wrap: break-word; }
+    </style>
+</head>
+<body class="bg-gray-950 text-gray-100 min-h-screen p-6">
+    <div class="max-w-6xl mx-auto flex flex-col gap-4 mb-8 border-b border-gray-800 pb-4">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-green-400">Live Generated Backend</h1>
+                <p class="text-gray-500 text-sm">Use your generated API directly from this project</p>
+            </div>
+            <a href="/" class="text-xs text-gray-400 hover:text-white">Back to Builder</a>
+        </div>
+
+        <div class="flex flex-wrap gap-2">
+            <input type="text" id="serviceId" placeholder="Service ID" class="bg-gray-900 border border-gray-700 p-2 rounded text-white outline-none focus:border-green-500">
+            <button onclick="connectService()" class="bg-blue-600 px-4 py-2 rounded font-bold hover:bg-blue-700">Connect</button>
+            <select id="resourceSelect" class="bg-gray-900 border border-gray-700 p-2 rounded text-white outline-none focus:border-green-500"></select>
+            <button onclick="loadRecords()" class="bg-gray-700 px-4 py-2 rounded font-bold hover:bg-gray-600">Refresh</button>
+        </div>
+
+        <div id="metaBox" class="text-xs text-gray-400"></div>
+    </div>
+
+    <div class="max-w-6xl mx-auto bg-gray-900 p-6 rounded-lg border border-gray-800 mb-8">
+        <div class="flex items-center justify-between mb-3">
+            <h2 class="text-lg font-bold text-cyan-400">API Command Center</h2>
+            <span id="copyStatus" class="text-xs text-gray-500"></span>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+            <div class="bg-black border border-gray-800 rounded p-3">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-gray-400">Meta</span>
+                    <button onclick="copyCurl('curlMeta')" class="text-cyan-300 hover:text-cyan-100">Copy</button>
+                </div>
+                <pre id="curlMeta" class="text-cyan-300"></pre>
+            </div>
+            <div class="bg-black border border-gray-800 rounded p-3">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-gray-400">List</span>
+                    <button onclick="copyCurl('curlList')" class="text-cyan-300 hover:text-cyan-100">Copy</button>
+                </div>
+                <pre id="curlList" class="text-cyan-300"></pre>
+            </div>
+            <div class="bg-black border border-gray-800 rounded p-3">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-gray-400">Create (POST)</span>
+                    <button onclick="copyCurl('curlCreate')" class="text-cyan-300 hover:text-cyan-100">Copy</button>
+                </div>
+                <pre id="curlCreate" class="text-cyan-300"></pre>
+            </div>
+            <div class="bg-black border border-gray-800 rounded p-3">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-gray-400">Update (PUT)</span>
+                    <button onclick="copyCurl('curlUpdate')" class="text-cyan-300 hover:text-cyan-100">Copy</button>
+                </div>
+                <pre id="curlUpdate" class="text-cyan-300"></pre>
+            </div>
+            <div class="bg-black border border-gray-800 rounded p-3 md:col-span-2">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-gray-400">Delete</span>
+                    <button onclick="copyCurl('curlDelete')" class="text-cyan-300 hover:text-cyan-100">Copy</button>
+                </div>
+                <pre id="curlDelete" class="text-cyan-300"></pre>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div class="bg-gray-900 p-6 rounded-lg border border-gray-800">
+            <h2 class="text-xl font-bold mb-4 text-purple-400">Create Record</h2>
+            <p class="text-xs text-gray-500 mb-2">JSON object for selected resource:</p>
+            <textarea id="jsonInput" rows="14" class="w-full bg-black text-green-300 p-4 rounded font-mono text-sm border border-gray-700 focus:border-purple-500 outline-none">{
+  "name": "example"
+}</textarea>
+            <button onclick="createRecord()" class="w-full mt-4 bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded transition">POST</button>
+        </div>
+
+        <div class="lg:col-span-2 bg-gray-900 p-6 rounded-lg border border-gray-800 flex flex-col h-[72vh]">
+            <div class="flex justify-between items-center mb-4">
+                <div>
+                    <h2 class="text-xl font-bold text-yellow-400">Saved Data (Live)</h2>
+                    <p class="text-xs text-gray-500">This section shows real data saved through your API.</p>
+                </div>
+                <div class="flex gap-2">
+                    <input id="recordIdInput" type="number" placeholder="Record ID" class="w-28 bg-gray-900 border border-gray-700 p-2 rounded text-white outline-none focus:border-yellow-500">
+                    <button onclick="updateRecord()" class="bg-amber-600 px-3 py-2 rounded font-bold hover:bg-amber-500">PUT</button>
+                    <button onclick="deleteRecord()" class="bg-red-700 px-3 py-2 rounded font-bold hover:bg-red-600">DELETE</button>
+                </div>
+            </div>
+            <div id="recordsContainer" class="flex-1 overflow-y-auto space-y-3 pr-2">
+                <p class="text-gray-600 text-center mt-10">Connect a service to start.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentServiceId = null;
+        let meta = null;
+        let copyTimer = null;
+        let isConnected = false;
+
+        const params = new URLSearchParams(window.location.search);
+        const initialId = params.get('id');
+        if (initialId) {
+            document.getElementById('serviceId').value = initialId;
+            connectService();
+        }
+
+        async function connectService() {
+            const serviceId = document.getElementById('serviceId').value.trim();
+            if (!serviceId) return alert('Enter a service ID first');
+
+            const res = await fetch(`/generated/${serviceId}/meta`);
+            const data = await res.json();
+            if (!res.ok || !data.success) {
+                disconnectState(data.message || data.error || 'Service unavailable or expired');
+                alert(data.message || data.error || 'Failed to load generated service metadata');
+                return;
+            }
+
+            currentServiceId = serviceId;
+            meta = data;
+            isConnected = true;
+
+            const resourceSelect = document.getElementById('resourceSelect');
+            resourceSelect.innerHTML = '';
+            data.resources.forEach((resource) => {
+                const option = document.createElement('option');
+                option.value = resource.key;
+                option.textContent = `${resource.key} (${resource.fields.length} fields)`;
+                resourceSelect.appendChild(option);
+            });
+
+            document.getElementById('metaBox').innerHTML = `
+                <div>Service: <span class="text-white">${data.name}</span></div>
+                <div>Type: <span class="text-white">${data.serviceType}</span></div>
+                <div>Description: <span class="text-white">${data.description}</span></div>
+                <div>Base API: <span class="text-white">/generated/${serviceId}</span></div>
+            `;
+
+            suggestPayload();
+            refreshCurlPanel();
+            await loadRecords();
+        }
+
+        function disconnectState(reason) {
+            currentServiceId = null;
+            meta = null;
+            isConnected = false;
+            document.getElementById('resourceSelect').innerHTML = '';
+            document.getElementById('metaBox').innerHTML = `<span class="text-red-400">${reason}</span>`;
+            document.getElementById('recordsContainer').innerHTML =
+                `<p class="text-red-400 text-center mt-10">${reason}</p>`;
+            refreshCurlPanel();
+        }
+
+        function getSelectedResource() {
+            const resource = document.getElementById('resourceSelect').value;
+            if (!currentServiceId || !resource) {
+                alert('Connect and select a resource first');
+                return null;
+            }
+            return resource;
+        }
+
+        function suggestPayload() {
+            if (!meta) return;
+            const key = document.getElementById('resourceSelect').value;
+            const resource = meta.resources.find((item) => item.key === key);
+            if (!resource) return;
+
+            const payload = {};
+            resource.fields.forEach((field) => {
+                if (field.type === 'string') payload[field.name] = `${field.name}-value`;
+                if (field.type === 'number') payload[field.name] = 1;
+                if (field.type === 'boolean') payload[field.name] = true;
+                if (field.type === 'object') payload[field.name] = { sample: true };
+            });
+            document.getElementById('jsonInput').value = JSON.stringify(payload, null, 2);
+            refreshCurlPanel();
+        }
+
+        function getApiContext() {
+            const serviceId = document.getElementById('serviceId').value.trim();
+            const resource = document.getElementById('resourceSelect').value;
+            const recordId = document.getElementById('recordIdInput').value.trim() || '{id}';
+            const origin = window.location.origin;
+            return { serviceId, resource, recordId, origin };
+        }
+
+        function escapeSingleQuotes(value) {
+            return String(value).replace(/'/g, `'\"'\"'`);
+        }
+
+        function refreshCurlPanel() {
+            const { serviceId, resource, recordId, origin } = getApiContext();
+
+            const fallback = '# Connect service first';
+            if (!serviceId || !resource) {
+                document.getElementById('curlMeta').textContent = fallback;
+                document.getElementById('curlList').textContent = fallback;
+                document.getElementById('curlCreate').textContent = fallback;
+                document.getElementById('curlUpdate').textContent = fallback;
+                document.getElementById('curlDelete').textContent = fallback;
+                return;
+            }
+
+            let rawPayload = document.getElementById('jsonInput').value.trim();
+            if (!rawPayload) rawPayload = '{}';
+
+            const quotedPayload = escapeSingleQuotes(rawPayload);
+            const base = `${origin}/generated/${serviceId}/${resource}`;
+
+            document.getElementById('curlMeta').textContent = `curl "${origin}/generated/${serviceId}/meta"`;
+            document.getElementById('curlList').textContent = `curl "${base}"`;
+            document.getElementById('curlCreate').textContent =
+                `curl -X POST "${base}" -H "Content-Type: application/json" -d '${quotedPayload}'`;
+            document.getElementById('curlUpdate').textContent =
+                `curl -X PUT "${base}/${recordId}" -H "Content-Type: application/json" -d '${quotedPayload}'`;
+            document.getElementById('curlDelete').textContent =
+                `curl -X DELETE "${base}/${recordId}"`;
+        }
+
+        async function copyCurl(elementId) {
+            const text = document.getElementById(elementId).textContent || '';
+            if (!text || text.startsWith('#')) return;
+            try {
+                await navigator.clipboard.writeText(text);
+            } catch {
+                const temp = document.createElement('textarea');
+                temp.value = text;
+                document.body.appendChild(temp);
+                temp.select();
+                document.execCommand('copy');
+                document.body.removeChild(temp);
+            }
+
+            const status = document.getElementById('copyStatus');
+            status.textContent = `Copied: ${elementId}`;
+            clearTimeout(copyTimer);
+            copyTimer = setTimeout(() => {
+                status.textContent = '';
+            }, 1200);
+        }
+
+        async function createRecord() {
+            const resource = getSelectedResource();
+            if (!resource) return;
+
+            let payload;
+            try {
+                payload = JSON.parse(document.getElementById('jsonInput').value);
+            } catch {
+                alert('Invalid JSON payload');
+                return;
+            }
+
+            const res = await fetch(`/generated/${currentServiceId}/${resource}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                if (res.status === 404 || res.status === 410) {
+                    disconnectState(data.message || data.error || 'Service expired or destroyed');
+                }
+                alert(data.error || 'Create failed');
+                return;
+            }
+
+            document.getElementById('recordIdInput').value = data.data?.id || '';
+            refreshCurlPanel();
+            await loadRecords();
+        }
+
+        async function loadRecords() {
+            const resource = getSelectedResource();
+            if (!resource) return;
+
+            const res = await fetch(`/generated/${currentServiceId}/${resource}`);
+            const data = await res.json();
+            const container = document.getElementById('recordsContainer');
+            container.innerHTML = '';
+
+            if (!res.ok) {
+                if (res.status === 404 || res.status === 410) {
+                    disconnectState(data.message || data.error || 'Service expired or destroyed');
+                    return;
+                }
+                container.innerHTML = `<p class="text-red-400">${data.error || 'Failed to load records'}</p>`;
+                return;
+            }
+
+            if (!data.data || data.data.length === 0) {
+                container.innerHTML = '<p class="text-gray-600 text-center mt-10">No records found.</p>';
+                return;
+            }
+
+            data.data.forEach((record) => {
+                const card = document.createElement('div');
+                card.className = 'bg-black border border-gray-700 p-4 rounded hover:border-yellow-500 transition';
+                card.innerHTML = `
+                    <div class="text-xs text-gray-500 mb-2">ID ${record.id}</div>
+                    <pre class="text-sm text-blue-300 overflow-x-auto">${JSON.stringify(record, null, 2)}</pre>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        async function updateRecord() {
+            const resource = getSelectedResource();
+            if (!resource) return;
+
+            const recordId = document.getElementById('recordIdInput').value.trim();
+            if (!recordId) return alert('Enter record ID for update');
+
+            let payload;
+            try {
+                payload = JSON.parse(document.getElementById('jsonInput').value);
+            } catch {
+                alert('Invalid JSON payload');
+                return;
+            }
+
+            const res = await fetch(`/generated/${currentServiceId}/${resource}/${recordId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                if (res.status === 404 || res.status === 410) {
+                    disconnectState(data.message || data.error || 'Service expired or destroyed');
+                }
+                alert(data.error || 'Update failed');
+                return;
+            }
+            refreshCurlPanel();
+            await loadRecords();
+        }
+
+        async function deleteRecord() {
+            const resource = getSelectedResource();
+            if (!resource) return;
+
+            const recordId = document.getElementById('recordIdInput').value.trim();
+            if (!recordId) return alert('Enter record ID for delete');
+
+            const res = await fetch(`/generated/${currentServiceId}/${resource}/${recordId}`, {
+                method: 'DELETE'
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                if (res.status === 404 || res.status === 410) {
+                    disconnectState(data.message || data.error || 'Service expired or destroyed');
+                }
+                alert(data.error || 'Delete failed');
+                return;
+            }
+            refreshCurlPanel();
+            await loadRecords();
+        }
+
+        document.getElementById('resourceSelect').addEventListener('change', () => {
+            suggestPayload();
+            loadRecords();
+        });
+        document.getElementById('jsonInput').addEventListener('input', refreshCurlPanel);
+        document.getElementById('recordIdInput').addEventListener('input', refreshCurlPanel);
+        document.getElementById('serviceId').addEventListener('input', refreshCurlPanel);
+        refreshCurlPanel();
+    </script>
+</body>
+</html>

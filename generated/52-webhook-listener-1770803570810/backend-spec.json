@@ -1,0 +1,20 @@
+{
+  "name": "webhook-listener",
+  "serviceType": "webhook_receiver",
+  "ttlHours": 0.17,
+  "description": "A generic webhook listener to receive incoming data.",
+  "resources": [
+    {
+      "name": "webhook-payload",
+      "description": "The generic structure for incoming webhook data.",
+      "fields": [
+        {
+          "name": "data",
+          "type": "object",
+          "required": true,
+          "description": "The complete JSON object received by the webhook."
+        }
+      ]
+    }
+  ]
+}

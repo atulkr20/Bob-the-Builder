@@ -1,0 +1,50 @@
+{
+  "name": "product-inventory-backend",
+  "serviceType": "crud_api",
+  "ttlHours": 0.1666,
+  "description": "Backend for managing product inventory.",
+  "resources": [
+    {
+      "name": "product",
+      "description": "Represents an item available in the inventory.",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "required": true,
+          "description": "Unique identifier for the product"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "required": true,
+          "description": "Name of the product"
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "required": false,
+          "description": "Detailed description of the product"
+        },
+        {
+          "name": "price",
+          "type": "number",
+          "required": true,
+          "description": "Price of the product"
+        },
+        {
+          "name": "stock_quantity",
+          "type": "number",
+          "required": true,
+          "description": "Current stock quantity of the product"
+        },
+        {
+          "name": "sku",
+          "type": "string",
+          "required": true,
+          "description": "Stock Keeping Unit for the product"
+        }
+      ]
+    }
+  ]
+}

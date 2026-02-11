@@ -8,6 +8,7 @@ import { delay } from "bullmq";
 
 const createServiceSchema = z.object({
     name: z.string().min(3, "Name must be at least 3 chars"),
+    serviceType: z.enum(["chat", "notes", "qa", "iot_logger", "crud_api", "webhook_receiver"]).default("crud_api"),
     ttlHours: z.number().min(0.1).max(48, "TTL must be between 0.1 and  48 hours")
 });
 
@@ -21,10 +22,10 @@ export const createService = async (req: Request, res: Response): Promise<void> 
 
         // Saving to DB
         const result = await query(
-            `INSERT INTO services (name, expires_at, status)
-            VALUES ($1, $2, 'ACTIVE' )
+            `INSERT INTO services (name, service_type, spec_json, expires_at, status)
+            VALUES ($1, $2, '{}'::jsonb, $3, 'ACTIVE' )
             RETURNING *`,
-            [validData.name, expiresAt]
+            [validData.name, validData.serviceType, expiresAt]
         );
 
         const newService = result.rows[0];
@@ -44,6 +45,7 @@ export const createService = async (req: Request, res: Response): Promise<void> 
             data:{
                 serviceId: newService.id,
                 name: newService.name,
+                serviceType: newService.service_type,
                 expiresAt: newService.expires_at,
 
                 // The URLS the user will use Next

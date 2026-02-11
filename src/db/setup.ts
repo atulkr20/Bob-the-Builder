@@ -26,10 +26,23 @@ const setupDatabase = async () => {
       CREATE TABLE IF NOT EXISTS services (
         id SERIAL PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
+        service_type VARCHAR(50) NOT NULL DEFAULT 'chat',
+        spec_json JSONB NOT NULL DEFAULT '{}'::jsonb,
         expires_at TIMESTAMP NOT NULL,
         status VARCHAR(50) DEFAULT 'ACTIVE',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
+    `);
+
+    // Backfill for existing DBs created before service_type was introduced.
+    await client.query(`
+      ALTER TABLE services
+      ADD COLUMN IF NOT EXISTS service_type VARCHAR(50) NOT NULL DEFAULT 'chat';
+    `);
+
+    await client.query(`
+      ALTER TABLE services
+      ADD COLUMN IF NOT EXISTS spec_json JSONB NOT NULL DEFAULT '{}'::jsonb;
     `);
 
     await client.query(`
@@ -38,6 +51,17 @@ const setupDatabase = async () => {
         service_id INT NOT NULL REFERENCES services(id) ON DELETE CASCADE,
         text TEXT NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS service_records (
+        id SERIAL PRIMARY KEY,
+        service_id INT NOT NULL REFERENCES services(id) ON DELETE CASCADE,
+        resource_name VARCHAR(255) NOT NULL,
+        payload JSONB NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
     

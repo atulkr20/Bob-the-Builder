@@ -6,7 +6,14 @@ import { query } from '../db/index.js';
 declare global {
     namespace Express {
         interface Request {
-            service?: any;
+            service?: {
+                id: number;
+                name: string;
+                service_type: string;
+                spec_json?: unknown;
+                expires_at: string | Date;
+                status: string;
+            };
         }
     }
 }
@@ -43,7 +50,8 @@ export const validateService = async (req: Request, res: Response, next: NextFun
             return;
         }
 
-        // Atach service to request object
+        // Attach service to request object for downstream handlers.
+        req.service = service;
         next();
     } catch (error) {
         console.error("validateService error:", error);

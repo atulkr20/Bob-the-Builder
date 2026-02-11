@@ -11,19 +11,19 @@
         .glow { box-shadow: 0 0 15px rgba(74, 222, 128, 0.5); }
     </style>
 </head>
-<body class="bg-gray-950 text-gray-100 h-screen flex flex-col items-center justify-center p-4">
+<body class="bg-gray-950 text-gray-100 min-h-screen flex flex-col items-center justify-center p-4">
 
     <div class="mb-10 text-center">
-        <h1 class="text-5xl font-bold text-green-400 mb-2">Bob the Builder 🤖</h1>
+        <h1 class="text-5xl font-bold text-green-400 mb-2">Bob the Builder</h1>
         <p class="text-gray-500">AI-Powered Ephemeral Infrastructure</p>
     </div>
 
     <div class="w-full max-w-2xl">
         <div class="bg-gray-900 p-1 rounded-lg border border-gray-700 glow transition-all focus-within:border-green-500">
             <form id="aiForm" class="flex items-center">
-                <span class="pl-4 text-green-500 text-xl">❯</span>
-                <input type="text" id="promptInput" 
-                    placeholder="Describe what you need... (e.g., 'A burner chat server for 10 mins')" 
+                <span class="pl-4 text-green-500 text-xl">></span>
+                <input type="text" id="promptInput"
+                    placeholder="Describe your backend (e.g., IoT logger with deviceId and payload for 10 mins)"
                     class="w-full bg-transparent p-4 outline-none text-white placeholder-gray-600" autocomplete="off">
                 <button type="submit" id="buildBtn"
                     class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-md font-bold mr-2 transition">
@@ -31,7 +31,16 @@
                 </button>
             </form>
         </div>
-        <p class="text-xs text-gray-600 mt-2 text-center">Powered by Google Gemini • Auto-destructs on timer</p>
+        <p class="text-xs text-gray-600 mt-2 text-center">Powered by Google Gemini - Auto-destructs on timer</p>
+    </div>
+
+    <div class="w-full max-w-2xl mt-4 bg-gray-900/70 border border-gray-800 rounded-lg p-4 text-xs text-gray-300">
+        <p class="text-green-400 font-bold mb-2">How To Use (3 Steps)</p>
+        <ol class="list-decimal ml-4 space-y-1">
+            <li>Describe your backend and click <span class="text-white font-bold">BUILD</span>.</li>
+            <li>Copy <span class="text-white">LIVE API</span> endpoints or open the dashboard link.</li>
+            <li>In your frontend, call the shown API URLs directly to send and fetch data.</li>
+        </ol>
     </div>
 
     <div id="terminal" class="w-full max-w-2xl mt-8 hidden">
@@ -48,11 +57,11 @@
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             const prompt = document.getElementById('promptInput').value;
-            if(!prompt) return;
+            if (!prompt) return;
 
             terminal.classList.remove('hidden');
             log(`user@host:~$ ${prompt}`);
-            log(`> Analyzing request with Gemini AI...`, 'text-yellow-500');
+            log('> Analyzing request with Gemini AI...', 'text-yellow-500');
 
             try {
                 const res = await fetch('/ai/build', {
@@ -63,24 +72,39 @@
                 const data = await res.json();
 
                 if (data.success) {
+                    const serviceType = data.data.serviceType || 'crud_api';
+                    const generated = data.data.generatedProject;
+                    const liveApi = data.data.liveApi;
+
                     log(`> [AI]: ${data.aiResponse}`, 'text-blue-400');
-                    log(`> --------------------------------`, 'text-gray-600');
-                    log(`> INFRASTRUCTURE DEPLOYED SUCCESSFULLY`, 'text-green-500 font-bold');
-                    log(`> SERVICE ID: ${data.data.serviceId}`);
+                    log('> --------------------------------', 'text-gray-600');
+                    log('> BACKEND SCAFFOLD GENERATED', 'text-green-500 font-bold');
+                    log(`> SERVICE ID: <span class="text-white">${data.data.serviceId}</span>`);
+                    log(`> SERVICE TYPE: <span class="text-white">${serviceType}</span>`);
                     log(`> EXPIRES AT: ${new Date(data.data.expiresAt).toLocaleTimeString()}`);
-                    log(`> ENDPOINT: POST /${data.data.serviceId}/message`);
+                    log(`> LIVE META: <span class="text-white">${liveApi.meta}</span>`);
+                    (liveApi.endpoints || []).slice(0, 8).forEach((endpoint) => {
+                        log(`> LIVE API: ${endpoint.method} ${endpoint.path}`, 'text-emerald-300');
+                    });
+                    log(`> PROJECT PATH: <span class="text-white">${generated.path}</span>`);
+                    log(`> OPENAPI: <span class="text-white">${generated.openApiPath}</span>`);
+                    log(`> RUN: <span class="text-white">${generated.runCommand}</span>`);
+                    (generated.endpoints || []).slice(0, 8).forEach((endpoint) => {
+                        log(`> ENDPOINT: ${endpoint.method} ${endpoint.path}`, 'text-cyan-300');
+                    });
+                    log(`> <a href="/dashboard.html?id=${data.data.serviceId}" target="_blank" class="text-yellow-400 underline hover:text-yellow-300 font-bold">OPEN LIVE DASHBOARD</a>`);
                 } else {
                     log(`> Error: ${data.error}`, 'text-red-500');
                 }
             } catch (err) {
-                log(`> Connection Failed.`, 'text-red-500');
+                log('> Connection failed.', 'text-red-500');
             }
         });
 
         function log(msg, colorClass = 'text-gray-300') {
             const div = document.createElement('div');
-            div.textContent = msg;
-            div.className = colorClass;
+            div.innerHTML = msg;
+            div.className = `${colorClass} break-words`;
             logs.appendChild(div);
             logs.scrollTop = logs.scrollHeight;
         }

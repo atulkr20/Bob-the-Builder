@@ -1,0 +1,50 @@
+{
+  "name": "iot-device-logger",
+  "serviceType": "iot_logger",
+  "ttlHours": 0.1,
+  "description": "Logs sensor data and events from IoT devices.",
+  "resources": [
+    {
+      "name": "device-reading",
+      "description": "A single data point or event logged by an IoT device.",
+      "fields": [
+        {
+          "name": "deviceId",
+          "type": "string",
+          "required": true,
+          "description": "Unique identifier for the IoT device sending the reading."
+        },
+        {
+          "name": "timestamp",
+          "type": "number",
+          "required": true,
+          "description": "Unix timestamp in milliseconds when the reading was recorded."
+        },
+        {
+          "name": "readingType",
+          "type": "string",
+          "required": true,
+          "description": "Type of sensor reading or event (e.g., 'temperature', 'humidity', 'batteryLevel', 'status')."
+        },
+        {
+          "name": "value",
+          "type": "number",
+          "required": true,
+          "description": "The measured value for the readingType."
+        },
+        {
+          "name": "unit",
+          "type": "string",
+          "required": false,
+          "description": "Unit of measurement for the value (e.g., 'C', '%', 'Pa', 'V')."
+        },
+        {
+          "name": "location",
+          "type": "object",
+          "required": false,
+          "description": "Geographical location of the device at the time of reading."
+        }
+      ]
+    }
+  ]
+}

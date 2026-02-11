@@ -3,6 +3,7 @@ import cors from 'cors';
 import serviceRoutes from './routes/services.routes.js'
 import messageRoutes from "./routes/message.routes.js"
 import aiRoutes from './routes/ai.routes.js'
+import generatedRoutes from './routes/generated.routes.js'
 const app = express();
 
 //middleware
@@ -14,6 +15,7 @@ app.use('/ai',aiRoutes);
 
 // Routes 
 app.use('/services', serviceRoutes)
+app.use('/generated/:serviceId', generatedRoutes);
 app.use('/:serviceId', messageRoutes);
 
 app.get("/", (req, res) => {

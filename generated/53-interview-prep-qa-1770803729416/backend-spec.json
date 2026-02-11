@@ -1,0 +1,44 @@
+{
+  "name": "interview-prep-qa",
+  "serviceType": "qa",
+  "ttlHours": 0.1,
+  "description": "Backend for managing interview questions and their answers for interview preparation.",
+  "resources": [
+    {
+      "name": "question",
+      "description": "An interview question along with its suggested answer.",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "required": true,
+          "description": "Unique identifier for the question"
+        },
+        {
+          "name": "question_text",
+          "type": "string",
+          "required": true,
+          "description": "The text of the interview question"
+        },
+        {
+          "name": "answer_text",
+          "type": "string",
+          "required": true,
+          "description": "The suggested answer to the question"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "required": false,
+          "description": "Category of the question (e.g., behavioral, technical, system design)"
+        },
+        {
+          "name": "difficulty_level",
+          "type": "string",
+          "required": false,
+          "description": "Difficulty level of the question (e.g., easy, medium, hard)"
+        }
+      ]
+    }
+  ]
+}

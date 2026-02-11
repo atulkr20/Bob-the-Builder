@@ -1,0 +1,158 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "iot-device-logger",
+    "version": "1.0.0",
+    "description": "Logs sensor data and events from IoT devices."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:4000"
+    }
+  ],
+  "paths": {
+    "/api/device-readings": {
+      "get": {
+        "summary": "List device-readings",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create device-reading",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/device-reading"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created"
+          }
+        }
+      }
+    },
+    "/api/device-readings/{id}": {
+      "get": {
+        "summary": "Get device-reading by id",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      },
+      "put": {
+        "summary": "Update device-reading by id",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/device-reading"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated"
+          },
+          "400": {
+            "description": "Validation failed"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete device-reading by id",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "device-reading": {
+        "type": "object",
+        "required": [
+          "deviceId",
+          "timestamp",
+          "readingType",
+          "value"
+        ],
+        "properties": {
+          "deviceId": {
+            "type": "string",
+            "description": "Unique identifier for the IoT device sending the reading."
+          },
+          "timestamp": {
+            "type": "number",
+            "description": "Unix timestamp in milliseconds when the reading was recorded."
+          },
+          "readingType": {
+            "type": "string",
+            "description": "Type of sensor reading or event (e.g., 'temperature', 'humidity', 'batteryLevel', 'status')."
+          },
+          "value": {
+            "type": "number",
+            "description": "The measured value for the readingType."
+          },
+          "unit": {
+            "type": "string",
+            "description": "Unit of measurement for the value (e.g., 'C', '%', 'Pa', 'V')."
+          },
+          "location": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "Geographical location of the device at the time of reading."
+          }
+        }
+      }
+    }
+  }
+}

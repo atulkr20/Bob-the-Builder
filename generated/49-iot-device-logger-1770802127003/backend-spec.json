@@ -1,0 +1,50 @@
+{
+  "name": "iot-device-logger",
+  "serviceType": "iot_logger",
+  "ttlHours": 0.16666666666666666,
+  "description": "A service to log data from IoT devices for a short duration.",
+  "resources": [
+    {
+      "name": "device-data",
+      "description": "Sensor and status data points logged from IoT devices.",
+      "fields": [
+        {
+          "name": "deviceId",
+          "type": "string",
+          "required": true,
+          "description": "Unique identifier of the IoT device."
+        },
+        {
+          "name": "timestamp",
+          "type": "string",
+          "required": true,
+          "description": "ISO 8601 formatted timestamp of the log entry."
+        },
+        {
+          "name": "sensorType",
+          "type": "string",
+          "required": true,
+          "description": "Type of sensor or data point (e.g., 'temperature', 'humidity', 'status')."
+        },
+        {
+          "name": "value",
+          "type": "number",
+          "required": true,
+          "description": "The measured value from the sensor or device."
+        },
+        {
+          "name": "unit",
+          "type": "string",
+          "required": false,
+          "description": "Unit of measurement for the value (e.g., 'C', '%', 'V')."
+        },
+        {
+          "name": "location",
+          "type": "object",
+          "required": false,
+          "description": "Optional geographical location of the device."
+        }
+      ]
+    }
+  ]
+}

@@ -27,6 +27,7 @@ try {
         try {
             // Deleting all Messages first
             await query('DELETE FROM messages WHERE service_id = $1', [serviceId]);
+            await query('DELETE FROM service_records WHERE service_id = $1', [serviceId]);
 
             // Mark Service as Destroyed
             await query(
