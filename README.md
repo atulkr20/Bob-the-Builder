@@ -232,12 +232,6 @@ Then they will render here:
 - Built operator dashboard with live CRUD and auto-generated cURL commands
 - Added automated smoke tests for end-to-end reliability checks
 
-## Suggested Resume Bullet Points
-
-- Engineered a prompt-to-backend platform that converts natural language requirements into strict, schema-validated API services.
-- Built dynamic multi-tenant CRUD runtime with per-service auth, request throttling, and TTL-based service lifecycle management.
-- Implemented asynchronous cleanup pipeline with BullMQ/Redis and idempotent rescheduling to prevent stale job execution.
-- Shipped an operator dashboard and smoke-test suite validating end-to-end service generation and data operations.
 
 ## Security Note
 
