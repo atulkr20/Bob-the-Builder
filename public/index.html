@@ -75,12 +75,14 @@
                     const serviceType = data.data.serviceType || 'crud_api';
                     const generated = data.data.generatedProject;
                     const liveApi = data.data.liveApi;
+                    const accessToken = data.data.accessToken;
 
                     log(`> [AI]: ${data.aiResponse}`, 'text-blue-400');
                     log('> --------------------------------', 'text-gray-600');
                     log('> BACKEND SCAFFOLD GENERATED', 'text-green-500 font-bold');
                     log(`> SERVICE ID: <span class="text-white">${data.data.serviceId}</span>`);
                     log(`> SERVICE TYPE: <span class="text-white">${serviceType}</span>`);
+                    log(`> ACCESS TOKEN: <span class="text-white">${accessToken}</span>`);
                     log(`> EXPIRES AT: ${new Date(data.data.expiresAt).toLocaleTimeString()}`);
                     log(`> LIVE META: <span class="text-white">${liveApi.meta}</span>`);
                     (liveApi.endpoints || []).slice(0, 8).forEach((endpoint) => {
@@ -92,7 +94,7 @@
                     (generated.endpoints || []).slice(0, 8).forEach((endpoint) => {
                         log(`> ENDPOINT: ${endpoint.method} ${endpoint.path}`, 'text-cyan-300');
                     });
-                    log(`> <a href="/dashboard.html?id=${data.data.serviceId}" target="_blank" class="text-yellow-400 underline hover:text-yellow-300 font-bold">OPEN LIVE DASHBOARD</a>`);
+                    log(`> <a href="/dashboard.html?id=${data.data.serviceId}&token=${accessToken}" target="_blank" class="text-yellow-400 underline hover:text-yellow-300 font-bold">OPEN LIVE DASHBOARD</a>`);
                 } else {
                     log(`> Error: ${data.error}`, 'text-red-500');
                 }

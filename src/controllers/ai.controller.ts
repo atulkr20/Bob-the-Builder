@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { z } from "zod";
 import dotenv from "dotenv";
+import { randomBytes } from "node:crypto";
 import { query } from "../db/index.js";
 import { scheduleCleanup } from "../../queue/cleanup.queue.js";
 import {
@@ -299,12 +300,13 @@ User Request: "${prompt}"
         const spec = normalizeSpec(parsed, prompt);
 
         const expiresAt = new Date(Date.now() + spec.ttlHours * 60 * 60 * 1000);
+        const accessToken = randomBytes(24).toString("hex");
 
         const dbResult = await query(
-            `INSERT INTO services (name, service_type, spec_json, expires_at, status)
-             VALUES ($1, $2, $3::jsonb, $4, 'ACTIVE')
+            `INSERT INTO services (name, service_type, access_token, spec_json, expires_at, status)
+             VALUES ($1, $2, $3, $4::jsonb, $5, 'ACTIVE')
              RETURNING *`,
-            [spec.name, spec.serviceType, JSON.stringify(spec), expiresAt]
+            [spec.name, spec.serviceType, accessToken, JSON.stringify(spec), expiresAt]
         );
 
         const newService = dbResult.rows[0] as {
@@ -346,6 +348,7 @@ User Request: "${prompt}"
                 serviceType: newService.service_type,
                 expiresAt: newService.expires_at,
                 ttlHours: spec.ttlHours,
+                accessToken,
                 resources: spec.resources,
                 generatedProject: {
                     path: artifact.rootDir,
@@ -356,7 +359,7 @@ User Request: "${prompt}"
                 },
                 liveApi: {
                     basePath: liveBasePath,
-                    meta: `${liveBasePath}/meta`,
+                    meta: `${liveBasePath}/meta?token=${accessToken}`,
                     endpoints: liveEndpoints
                 }
             }

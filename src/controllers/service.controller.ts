@@ -1,5 +1,6 @@
 import { type Request, type Response } from "express";
 import { z } from "zod";
+import { randomBytes } from "node:crypto";
 import { query } from '../db/index.js'
 import { scheduleCleanup } from "../../queue/cleanup.queue.js";
 import { delay } from "bullmq";
@@ -19,13 +20,14 @@ export const createService = async (req: Request, res: Response): Promise<void> 
 
         // Calculating Expiring Time
         const expiresAt = new Date(Date.now() + validData.ttlHours * 60 * 60 * 1000);
+        const accessToken = randomBytes(24).toString("hex");
 
         // Saving to DB
         const result = await query(
-            `INSERT INTO services (name, service_type, spec_json, expires_at, status)
-            VALUES ($1, $2, '{}'::jsonb, $3, 'ACTIVE' )
+            `INSERT INTO services (name, service_type, access_token, spec_json, expires_at, status)
+            VALUES ($1, $2, $3, '{}'::jsonb, $4, 'ACTIVE' )
             RETURNING *`,
-            [validData.name, validData.serviceType, expiresAt]
+            [validData.name, validData.serviceType, accessToken, expiresAt]
         );
 
         const newService = result.rows[0];
@@ -46,6 +48,7 @@ export const createService = async (req: Request, res: Response): Promise<void> 
                 serviceId: newService.id,
                 name: newService.name,
                 serviceType: newService.service_type,
+                accessToken,
                 expiresAt: newService.expires_at,
 
                 // The URLS the user will use Next

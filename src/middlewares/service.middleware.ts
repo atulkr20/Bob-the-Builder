@@ -10,6 +10,7 @@ declare global {
                 id: number;
                 name: string;
                 service_type: string;
+                access_token?: string;
                 spec_json?: unknown;
                 expires_at: string | Date;
                 status: string;

@@ -27,6 +27,7 @@ const setupDatabase = async () => {
         id SERIAL PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
         service_type VARCHAR(50) NOT NULL DEFAULT 'chat',
+        access_token VARCHAR(128) NOT NULL DEFAULT '',
         spec_json JSONB NOT NULL DEFAULT '{}'::jsonb,
         expires_at TIMESTAMP NOT NULL,
         status VARCHAR(50) DEFAULT 'ACTIVE',
@@ -43,6 +44,11 @@ const setupDatabase = async () => {
     await client.query(`
       ALTER TABLE services
       ADD COLUMN IF NOT EXISTS spec_json JSONB NOT NULL DEFAULT '{}'::jsonb;
+    `);
+
+    await client.query(`
+      ALTER TABLE services
+      ADD COLUMN IF NOT EXISTS access_token VARCHAR(128) NOT NULL DEFAULT '';
     `);
 
     await client.query(`

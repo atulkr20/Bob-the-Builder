@@ -23,6 +23,7 @@
 
         <div class="flex flex-wrap gap-2">
             <input type="text" id="serviceId" placeholder="Service ID" class="bg-gray-900 border border-gray-700 p-2 rounded text-white outline-none focus:border-green-500">
+            <input type="text" id="serviceToken" placeholder="Service Token" class="bg-gray-900 border border-gray-700 p-2 rounded text-white outline-none focus:border-green-500 min-w-[220px]">
             <button onclick="connectService()" class="bg-blue-600 px-4 py-2 rounded font-bold hover:bg-blue-700">Connect</button>
             <select id="resourceSelect" class="bg-gray-900 border border-gray-700 p-2 rounded text-white outline-none focus:border-green-500"></select>
             <button onclick="loadRecords()" class="bg-gray-700 px-4 py-2 rounded font-bold hover:bg-gray-600">Refresh</button>
@@ -105,22 +106,33 @@
 
     <script>
         let currentServiceId = null;
+        let currentToken = '';
         let meta = null;
         let copyTimer = null;
         let isConnected = false;
 
         const params = new URLSearchParams(window.location.search);
         const initialId = params.get('id');
+        const initialToken = params.get('token');
         if (initialId) {
             document.getElementById('serviceId').value = initialId;
+        }
+        if (initialToken) {
+            document.getElementById('serviceToken').value = initialToken;
+        }
+        if (initialId && initialToken) {
             connectService();
         }
 
         async function connectService() {
             const serviceId = document.getElementById('serviceId').value.trim();
+            const token = document.getElementById('serviceToken').value.trim();
             if (!serviceId) return alert('Enter a service ID first');
+            if (!token) return alert('Enter service token');
 
-            const res = await fetch(`/generated/${serviceId}/meta`);
+            const res = await fetch(`/generated/${serviceId}/meta`, {
+                headers: { 'x-service-token': token }
+            });
             const data = await res.json();
             if (!res.ok || !data.success) {
                 disconnectState(data.message || data.error || 'Service unavailable or expired');
@@ -129,6 +141,7 @@
             }
 
             currentServiceId = serviceId;
+            currentToken = token;
             meta = data;
             isConnected = true;
 
@@ -146,6 +159,7 @@
                 <div>Type: <span class="text-white">${data.serviceType}</span></div>
                 <div>Description: <span class="text-white">${data.description}</span></div>
                 <div>Base API: <span class="text-white">/generated/${serviceId}</span></div>
+                <div>Token: <span class="text-white">${token}</span></div>
             `;
 
             suggestPayload();
@@ -155,6 +169,7 @@
 
         function disconnectState(reason) {
             currentServiceId = null;
+            currentToken = '';
             meta = null;
             isConnected = false;
             document.getElementById('resourceSelect').innerHTML = '';
@@ -192,10 +207,11 @@
 
         function getApiContext() {
             const serviceId = document.getElementById('serviceId').value.trim();
+            const token = document.getElementById('serviceToken').value.trim();
             const resource = document.getElementById('resourceSelect').value;
             const recordId = document.getElementById('recordIdInput').value.trim() || '{id}';
             const origin = window.location.origin;
-            return { serviceId, resource, recordId, origin };
+            return { serviceId, token, resource, recordId, origin };
         }
 
         function escapeSingleQuotes(value) {
@@ -203,10 +219,10 @@
         }
 
         function refreshCurlPanel() {
-            const { serviceId, resource, recordId, origin } = getApiContext();
+            const { serviceId, token, resource, recordId, origin } = getApiContext();
 
             const fallback = '# Connect service first';
-            if (!serviceId || !resource) {
+            if (!serviceId || !resource || !token) {
                 document.getElementById('curlMeta').textContent = fallback;
                 document.getElementById('curlList').textContent = fallback;
                 document.getElementById('curlCreate').textContent = fallback;
@@ -220,15 +236,16 @@
 
             const quotedPayload = escapeSingleQuotes(rawPayload);
             const base = `${origin}/generated/${serviceId}/${resource}`;
+            const tokenHeader = `-H "x-service-token: ${token}"`;
 
-            document.getElementById('curlMeta').textContent = `curl "${origin}/generated/${serviceId}/meta"`;
-            document.getElementById('curlList').textContent = `curl "${base}"`;
+            document.getElementById('curlMeta').textContent = `curl "${origin}/generated/${serviceId}/meta" ${tokenHeader}`;
+            document.getElementById('curlList').textContent = `curl "${base}" ${tokenHeader}`;
             document.getElementById('curlCreate').textContent =
-                `curl -X POST "${base}" -H "Content-Type: application/json" -d '${quotedPayload}'`;
+                `curl -X POST "${base}" ${tokenHeader} -H "Content-Type: application/json" -d '${quotedPayload}'`;
             document.getElementById('curlUpdate').textContent =
-                `curl -X PUT "${base}/${recordId}" -H "Content-Type: application/json" -d '${quotedPayload}'`;
+                `curl -X PUT "${base}/${recordId}" ${tokenHeader} -H "Content-Type: application/json" -d '${quotedPayload}'`;
             document.getElementById('curlDelete').textContent =
-                `curl -X DELETE "${base}/${recordId}"`;
+                `curl -X DELETE "${base}/${recordId}" ${tokenHeader}`;
         }
 
         async function copyCurl(elementId) {
@@ -267,7 +284,7 @@
 
             const res = await fetch(`/generated/${currentServiceId}/${resource}`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', 'x-service-token': currentToken },
                 body: JSON.stringify(payload)
             });
             const data = await res.json();
@@ -288,7 +305,9 @@
             const resource = getSelectedResource();
             if (!resource) return;
 
-            const res = await fetch(`/generated/${currentServiceId}/${resource}`);
+            const res = await fetch(`/generated/${currentServiceId}/${resource}`, {
+                headers: { 'x-service-token': currentToken }
+            });
             const data = await res.json();
             const container = document.getElementById('recordsContainer');
             container.innerHTML = '';
@@ -335,7 +354,7 @@
 
             const res = await fetch(`/generated/${currentServiceId}/${resource}/${recordId}`, {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', 'x-service-token': currentToken },
                 body: JSON.stringify(payload)
             });
             const data = await res.json();
@@ -358,7 +377,8 @@
             if (!recordId) return alert('Enter record ID for delete');
 
             const res = await fetch(`/generated/${currentServiceId}/${resource}/${recordId}`, {
-                method: 'DELETE'
+                method: 'DELETE',
+                headers: { 'x-service-token': currentToken }
             });
             const data = await res.json();
             if (!res.ok) {
@@ -379,6 +399,7 @@
         document.getElementById('jsonInput').addEventListener('input', refreshCurlPanel);
         document.getElementById('recordIdInput').addEventListener('input', refreshCurlPanel);
         document.getElementById('serviceId').addEventListener('input', refreshCurlPanel);
+        document.getElementById('serviceToken').addEventListener('input', refreshCurlPanel);
         refreshCurlPanel();
     </script>
 </body>
