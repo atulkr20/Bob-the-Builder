@@ -170,7 +170,6 @@ Optional env vars:
 public/
   index.html
   dashboard.html
-  client.html
 scripts/
   smoke-test.mjs
 src/
