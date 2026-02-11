@@ -70,7 +70,7 @@ flowchart LR
 | `src/middlewares/service.middleware.ts` | Service existence + expiry/destroy checks (`410` on expired services). |
 | `src/middlewares/generated-auth.middleware.ts` | Token auth for all generated endpoints (`x-service-token`, bearer, query fallback). |
 | `src/middlewares/rate-limit.middleware.ts` | In-memory throttling to control request bursts per client and route. |
-| `queue/cleanup.queue.ts` + `queue/cleanup.worker.ts` | TTL scheduling and asynchronous cleanup/destruction lifecycle. |
+| `src/queue/cleanup.queue.ts` + `src/queue/cleanup.worker.ts` | TTL scheduling and asynchronous cleanup/destruction lifecycle. |
 | `scripts/smoke-test.mjs` | End-to-end verification of build -> CRUD -> delete lifecycle. |
 
 ## Quick Start
@@ -193,9 +193,9 @@ src/
   db/
     setup.ts
     index.ts
-queue/
-  cleanup.queue.ts
-  cleanup.worker.ts
+  queue/
+    cleanup.queue.ts
+    cleanup.worker.ts
 ```
 
 ## Screenshots

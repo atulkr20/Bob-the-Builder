@@ -1,7 +1,7 @@
 import app from "./app.js";
 import dotenv from 'dotenv';
 import { testDbConnection } from "./db/index.js";
-import "../queue/cleanup.worker.js";
+import "./queue/cleanup.worker.js";
 dotenv.config();
 
 const PORT = process.env.PORT || 5000;

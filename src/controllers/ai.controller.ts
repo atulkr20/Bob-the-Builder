@@ -4,7 +4,7 @@ import { z } from "zod";
 import dotenv from "dotenv";
 import { randomBytes } from "node:crypto";
 import { query } from "../db/index.js";
-import { scheduleCleanup } from "../../queue/cleanup.queue.js";
+import { scheduleCleanup } from "../queue/cleanup.queue.js";
 import {
     generateBackendScaffold,
     type BackendSpec,

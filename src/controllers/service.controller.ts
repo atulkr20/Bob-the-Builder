@@ -2,7 +2,7 @@ import { type Request, type Response } from "express";
 import { z } from "zod";
 import { randomBytes } from "node:crypto";
 import { query } from '../db/index.js'
-import { scheduleCleanup } from "../../queue/cleanup.queue.js";
+import { scheduleCleanup } from "../queue/cleanup.queue.js";
 
 // Defining validation Schema
 

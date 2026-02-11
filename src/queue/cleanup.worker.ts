@@ -2,7 +2,7 @@ import { Worker } from 'bullmq';
 import RedisModule from 'ioredis';
 // @ts-ignore - ioredis ESM compatibility
 const Redis = RedisModule.default || RedisModule;
-import { query } from '../src/db/index.js';
+import { query } from '../db/index.js';
 
 let connection;
 let cleanupWorker;
