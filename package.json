@@ -13,8 +13,8 @@
     "typecheck": "tsc --noEmit",
     "db:setup": "tsx src/db/setup.ts",
     "dev": "tsx watch src/server.ts",
-    "start": "tsx src/server.ts",
-    "start:worker": "tsx src/queue/cleanup.worker.ts",
+    "start": "node --loader tsx src/server.ts",
+    "start:worker": "node --loader tsx src/queue/cleanup.worker.ts",
     "smoke:test": "node scripts/smoke-test.mjs"
   },
   "keywords": [],
