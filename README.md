@@ -206,19 +206,12 @@ src/
 
 Add screenshots to `docs/screenshots/` and keep these names:
 - `01-home-build.png`
-- `02-build-output.png`
-- `03-dashboard-connected.png`
-- `04-dashboard-records.png`
-- `05-curl-command-center.png`
+- `02-dashboard.png`
 
 Then they will render here:
 
 ![Home Build](docs/screenshots/01-home-build.png)
-![Build Output](docs/screenshots/02-build-output.png)
-![Dashboard Connected](docs/screenshots/03-dashboard-connected.png)
-![Dashboard Records](docs/screenshots/04-dashboard-records.png)
-![Command Center](docs/screenshots/05-curl-command-center.png)
-
+![Dashboard](docs/screenshots/02-dashboard.png)
 ## Status Codes
 
 - `201` created
@@ -240,4 +233,6 @@ Then they will render here:
 ## Security Note
 
 If any real API key was exposed during development, rotate it immediately and update `.env`.
+
+
 
