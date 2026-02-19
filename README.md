@@ -204,12 +204,6 @@ src/
 
 ## Screenshots
 
-Add screenshots to `docs/screenshots/` and keep these names:
-- `01-home-build.png`
-- `02-dashboard.png`
-
-Then they will render here:
-
 ![Home Build](docs/screenshots/01-home-build.png)
 ![Dashboard](docs/screenshots/02-dashboard.png)
 ## Status Codes
@@ -220,19 +214,6 @@ Then they will render here:
 - `404` service/resource/record not found
 - `410` service expired/destroyed
 - `500` internal error
-
-## Resume-Ready Highlights
-
-- Built an AI-to-API generation pipeline using strict schema validation
-- Implemented dynamic multi-tenant runtime APIs from generated specs
-- Added TTL-based lifecycle cleanup with BullMQ worker
-- Built operator dashboard with live CRUD and auto-generated cURL commands
-- Added automated smoke tests for end-to-end reliability checks
-
-
-## Security Note
-
-If any real API key was exposed during development, rotate it immediately and update `.env`.
 
 
 
