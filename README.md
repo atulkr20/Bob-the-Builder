@@ -1,4 +1,4 @@
-# Bob the Builder
+﻿# Bob the Builder
 
 Prompt-to-backend generator for frontend developers.
 
@@ -116,6 +116,11 @@ Open: `http://localhost:5000`
    - POST/GET/PUT/DELETE records
    - copy cURL commands for integration
 
+
+## Health & Metrics
+
+- `GET /health` — service health check (DB/Redis connectivity + uptime).
+- `GET /metrics` — basic runtime metrics (requests, errors, avg latency).
 ## Live API Endpoints
 
 For generated service `<serviceId>`:
@@ -235,3 +240,4 @@ Then they will render here:
 ## Security Note
 
 If any real API key was exposed during development, rotate it immediately and update `.env`.
+

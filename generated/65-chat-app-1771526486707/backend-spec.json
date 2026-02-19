@@ -1,0 +1,68 @@
+{
+  "name": "chat-app",
+  "serviceType": "chat",
+  "ttlHours": 24,
+  "description": "A real-time chat application allowing users to send and receive messages.",
+  "resources": [
+    {
+      "name": "messages",
+      "description": "Represents individual chat messages exchanged between users.",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "required": true,
+          "description": "Unique identifier for the message."
+        },
+        {
+          "name": "senderId",
+          "type": "string",
+          "required": true,
+          "description": "ID of the user who sent the message."
+        },
+        {
+          "name": "content",
+          "type": "string",
+          "required": true,
+          "description": "The textual content of the message."
+        },
+        {
+          "name": "timestamp",
+          "type": "number",
+          "required": true,
+          "description": "Unix timestamp indicating when the message was sent."
+        },
+        {
+          "name": "chatRoomId",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the chat room or conversation the message belongs to."
+        }
+      ]
+    },
+    {
+      "name": "users",
+      "description": "User profiles participating in the chat application.",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "required": true,
+          "description": "Unique identifier for the user."
+        },
+        {
+          "name": "username",
+          "type": "string",
+          "required": true,
+          "description": "Display name of the user."
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "required": true,
+          "description": "Current online status of the user (e.g., 'online', 'offline', 'away')."
+        }
+      ]
+    }
+  ]
+}

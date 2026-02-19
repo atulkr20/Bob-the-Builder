@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -6,118 +6,106 @@
     <title>Bob Live API Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
-        body { font-family: 'JetBrains Mono', monospace; }
-        pre { white-space: pre-wrap; word-wrap: break-word; }
-        .status-pill { border: 1px solid #374151; background: #111827; padding: 6px 10px; border-radius: 8px; font-size: 12px; }
-        .tab-btn { border: 1px solid #374151; background: #111827; color: #d1d5db; padding: 8px 10px; border-radius: 8px; font-size: 12px; font-weight: 700; }
-        .tab-btn.active { border-color: #22d3ee; color: #67e8f9; background: #0b1220; }
-        .toast { border: 1px solid #374151; border-radius: 8px; padding: 10px 12px; font-size: 12px; margin-bottom: 8px; }
-        .toast.success { background: #062e1e; border-color: #14532d; color: #86efac; }
-        .toast.error { background: #3f0a0a; border-color: #7f1d1d; color: #fca5a5; }
-        .toast.info { background: #0f172a; border-color: #1e293b; color: #cbd5e1; }
-        .records-table th { position: sticky; top: 0; background: #030712; z-index: 1; }
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap');
+        :root {
+            --ink: #0b0f19;
+            --panel: #0f172a;
+            --panel-2: #111827;
+            --stroke: #263041;
+            --accent: #22c55e;
+            --accent-2: #86efac;
+            --accent-3: #10b981;
+        }
+        body { font-family: 'Space Grotesk', sans-serif; }
+        pre { white-space: pre-wrap; word-wrap: break-word; font-family: 'IBM Plex Mono', monospace; }
+        .status-pill { border: 1px solid var(--stroke); background: rgba(15, 23, 42, 0.8); padding: 6px 10px; border-radius: 10px; font-size: 12px; }
+        .toast { border: 1px solid var(--stroke); border-radius: 10px; padding: 10px 12px; font-size: 12px; margin-bottom: 8px; backdrop-filter: blur(6px); }
+        .toast.success { background: rgba(6, 46, 30, 0.75); border-color: #14532d; color: #86efac; }
+        .toast.error { background: rgba(63, 10, 10, 0.75); border-color: #7f1d1d; color: #fca5a5; }
+        .toast.info { background: rgba(15, 23, 42, 0.75); border-color: #1e293b; color: #cbd5e1; }
+        .glass { background: rgba(15, 23, 42, 0.75); border: 1px solid var(--stroke); }
+        .glow-outline { box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.28), 0 10px 30px rgba(34, 197, 94, 0.18); }
+        .soft-grid {
+            background-image:
+                radial-gradient(circle at 15% 20%, rgba(34, 197, 94, 0.14), transparent 40%),
+                radial-gradient(circle at 85% 10%, rgba(16, 185, 129, 0.12), transparent 35%),
+                radial-gradient(circle at 70% 80%, rgba(134, 239, 172, 0.12), transparent 40%),
+                linear-gradient(120deg, rgba(15, 23, 42, 0.95), rgba(2, 6, 23, 0.98));
+        }
+        .fade-in { animation: fadeInUp 600ms ease both; }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
-<body class="bg-gray-950 text-gray-100 min-h-screen p-6">
+<body class="soft-grid text-gray-100 min-h-screen p-6">
     <div id="toastArea" class="fixed right-4 top-4 w-80 z-50"></div>
-    <div class="max-w-6xl mx-auto flex flex-col gap-4 mb-8 border-b border-gray-800 pb-4">
+
+    <div class="max-w-6xl mx-auto flex flex-col gap-4 mb-8 border-b border-slate-800/70 pb-4 fade-in">
         <div class="flex items-center justify-between">
             <div>
-                <h1 class="text-3xl font-bold text-green-400">Live Generated Backend</h1>
-                <p class="text-gray-500 text-sm">Use your generated API directly from this project</p>
+                <h1 class="text-3xl font-bold text-emerald-300 tracking-tight">Live Generated Backend</h1>
+                <p class="text-slate-400 text-sm">Turn your prompt into live APIs, instantly.</p>
             </div>
-            <a href="/" class="text-xs text-gray-400 hover:text-white">Back to Builder</a>
+            <a href="/" class="text-xs text-slate-400 hover:text-white">Back to Builder</a>
         </div>
-        <div id="statusStrip" class="grid grid-cols-2 md:grid-cols-4 gap-2">
+        <div id="statusStrip" class="flex flex-wrap items-center gap-2 text-xs">
             <div class="status-pill">Status: <span id="statusConnected" class="text-red-300 font-bold">Disconnected</span></div>
             <div class="status-pill">Type: <span id="statusType" class="text-white">--</span></div>
-            <div class="status-pill">Time Left: <span id="statusTtl" class="text-yellow-300 font-bold">--:--:--</span></div>
+            <div class="status-pill">TTL: <span id="statusTtl" class="text-yellow-300 font-bold">--:--:--</span></div>
             <div class="status-pill">Health: <span id="statusHealth" class="text-gray-300">Waiting</span></div>
+            <div class="status-pill">System: <span id="statusSystem" class="text-gray-300">Checking</span></div>
         </div>
 
         <div class="flex flex-wrap gap-2">
-            <input type="text" id="serviceId" placeholder="Service ID" class="bg-gray-900 border border-gray-700 p-2 rounded text-white outline-none focus:border-green-500">
-            <input type="text" id="serviceToken" placeholder="Service Token" class="bg-gray-900 border border-gray-700 p-2 rounded text-white outline-none focus:border-green-500 min-w-[220px]">
-            <button onclick="connectService()" class="bg-blue-600 px-4 py-2 rounded font-bold hover:bg-blue-700">Connect</button>
-            <select id="resourceSelect" class="bg-gray-900 border border-gray-700 p-2 rounded text-white outline-none focus:border-green-500"></select>
-            <button onclick="loadRecords()" class="bg-gray-700 px-4 py-2 rounded font-bold hover:bg-gray-600">Refresh</button>
+            <input type="text" id="serviceId" placeholder="Service ID" class="glass p-2 rounded text-white outline-none focus:border-emerald-500">
+            <input type="text" id="serviceToken" placeholder="Service Token" class="glass p-2 rounded text-white outline-none focus:border-emerald-500 min-w-[220px]">
+            <button onclick="connectService()" class="bg-emerald-600 px-4 py-2 rounded font-bold hover:bg-emerald-500">Connect</button>
+            <select id="resourceSelect" class="glass p-2 rounded text-white outline-none focus:border-emerald-500"></select>
+            <button onclick="refreshPanels()" class="bg-slate-700 px-4 py-2 rounded font-bold hover:bg-slate-600">Refresh</button>
         </div>
 
-        <div id="metaBox" class="text-xs text-gray-400"></div>
+        <div id="metaBox" class="text-xs text-slate-400"></div>
     </div>
 
-    <div class="max-w-6xl mx-auto bg-gray-900 p-6 rounded-lg border border-gray-800 mb-8">
-        <div class="flex items-center justify-between mb-3">
-            <h2 class="text-lg font-bold text-cyan-400">API Command Center</h2>
-            <span id="copyStatus" class="text-xs text-gray-500"></span>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-            <div class="bg-black border border-gray-800 rounded p-3">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-gray-400">Meta</span>
-                    <button onclick="copyCurl('curlMeta')" class="text-cyan-300 hover:text-cyan-100">Copy</button>
-                </div>
-                <pre id="curlMeta" class="text-cyan-300"></pre>
-            </div>
-            <div class="bg-black border border-gray-800 rounded p-3">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-gray-400">List</span>
-                    <button onclick="copyCurl('curlList')" class="text-cyan-300 hover:text-cyan-100">Copy</button>
-                </div>
-                <pre id="curlList" class="text-cyan-300"></pre>
-            </div>
-            <div class="bg-black border border-gray-800 rounded p-3">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-gray-400">Create (POST)</span>
-                    <button onclick="copyCurl('curlCreate')" class="text-cyan-300 hover:text-cyan-100">Copy</button>
-                </div>
-                <pre id="curlCreate" class="text-cyan-300"></pre>
-            </div>
-            <div class="bg-black border border-gray-800 rounded p-3">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-gray-400">Update (PUT)</span>
-                    <button onclick="copyCurl('curlUpdate')" class="text-cyan-300 hover:text-cyan-100">Copy</button>
-                </div>
-                <pre id="curlUpdate" class="text-cyan-300"></pre>
-            </div>
-            <div class="bg-black border border-gray-800 rounded p-3 md:col-span-2">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-gray-400">Delete</span>
-                    <button onclick="copyCurl('curlDelete')" class="text-cyan-300 hover:text-cyan-100">Copy</button>
-                </div>
-                <pre id="curlDelete" class="text-cyan-300"></pre>
-            </div>
-        </div>
-    </div>
-
-    <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div class="bg-gray-900 p-6 rounded-lg border border-gray-800">
-            <h2 class="text-xl font-bold mb-4 text-cyan-400">Record Editor</h2>
-            <div class="grid grid-cols-3 gap-2 mb-3">
-                <button id="tabCreate" class="tab-btn active" onclick="setActionMode('create')">Create</button>
-                <button id="tabUpdate" class="tab-btn" onclick="setActionMode('update')">Update</button>
-                <button id="tabDelete" class="tab-btn" onclick="setActionMode('delete')">Delete</button>
-            </div>
-            <p id="editorHint" class="text-xs text-gray-500 mb-2">JSON object for selected resource:</p>
-            <textarea id="jsonInput" rows="14" class="w-full bg-black text-green-300 p-4 rounded font-mono text-sm border border-gray-700 focus:border-purple-500 outline-none">{
-  "name": "example"
-}</textarea>
-            <div id="recordIdWrap" class="mt-3 hidden">
-                <input id="recordIdInput" type="number" placeholder="Record ID" class="w-full bg-gray-900 border border-gray-700 p-2 rounded text-white outline-none focus:border-yellow-500">
-            </div>
-            <button id="editorActionBtn" onclick="submitRecordAction()" class="w-full mt-4 bg-cyan-700 hover:bg-cyan-600 text-white font-bold py-3 rounded transition">POST Create</button>
-        </div>
-
-        <div class="lg:col-span-2 bg-gray-900 p-6 rounded-lg border border-gray-800 flex flex-col h-[72vh]">
-            <div class="flex justify-between items-center mb-4">
+    <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6 fade-in">
+        <div class="glass glow-outline p-6 rounded-lg">
+            <div class="flex items-center justify-between mb-4">
                 <div>
-                    <h2 class="text-xl font-bold text-yellow-400">Saved Data (Live)</h2>
-                    <p class="text-xs text-gray-500">Readable table view with latest records first.</p>
+                    <h2 class="text-xl font-bold text-emerald-300">Endpoints</h2>
+                    <p class="text-xs text-slate-400">Copy these into your frontend.</p>
                 </div>
+                <span id="copyStatus" class="text-xs text-slate-400"></span>
             </div>
-            <div id="recordsContainer" class="flex-1 overflow-auto pr-2">
-                <p class="text-gray-600 text-center mt-10">Connect a service to start.</p>
+            <div id="endpointsList" class="space-y-2 text-xs">
+                <div class="text-slate-500">Connect a service to see endpoints.</div>
+            </div>
+        </div>
+
+        <div class="glass glow-outline p-6 rounded-lg">
+            <div class="mb-4">
+                <h2 class="text-xl font-bold text-emerald-300">How to Use in Frontend</h2>
+                <p class="text-xs text-slate-400">Beginner-friendly steps + examples.</p>
+            </div>
+
+            <div class="grid grid-cols-1 gap-3 text-xs">
+                <div class="bg-slate-950/80 border border-slate-800 rounded p-3">
+                    <div class="text-slate-400 mb-1">Step 1: Base URL</div>
+                    <div id="frontendBase" class="text-white break-words">https://your-domain.com/generated/{serviceId}</div>
+                </div>
+                <div class="bg-slate-950/80 border border-slate-800 rounded p-3">
+                    <div class="text-slate-400 mb-1">Step 2: Token Header</div>
+                    <div id="frontendToken" class="text-white break-words">x-service-token: {token}</div>
+                </div>
+                <div class="bg-slate-950/80 border border-slate-800 rounded p-3">
+                    <div class="text-slate-400 mb-1">Step 3: Create Example</div>
+                    <pre id="frontendCreate" class="text-emerald-300"></pre>
+                </div>
+                <div class="bg-slate-950/80 border border-slate-800 rounded p-3">
+                    <div class="text-slate-400 mb-1">Step 4: List Example</div>
+                    <pre id="frontendList" class="text-emerald-300"></pre>
+                </div>
             </div>
         </div>
     </div>
@@ -130,7 +118,7 @@
         let isConnected = false;
         let ttlInterval = null;
         let currentExpiresAt = null;
-        let actionMode = 'create';
+        let systemHealthTimer = null;
 
         const params = new URLSearchParams(window.location.search);
         const initialId = params.get('id');
@@ -143,6 +131,30 @@
         }
         if (initialId && initialToken) {
             connectService();
+        }
+
+        function setSystemStatus(label, className = 'text-gray-300') {
+            const el = document.getElementById('statusSystem');
+            el.textContent = label;
+            el.className = className;
+        }
+
+        async function loadSystemHealth() {
+            try {
+                const res = await fetch('/health');
+                const data = await res.json();
+                if (!res.ok || !data.ok) {
+                    setSystemStatus('Degraded', 'text-yellow-300 font-bold');
+                    return;
+                }
+                if (data.db === 'connected' && (data.redis === 'connected' || data.redis === 'disabled')) {
+                    setSystemStatus('Healthy', 'text-emerald-300 font-bold');
+                    return;
+                }
+                setSystemStatus('Partial', 'text-yellow-300 font-bold');
+            } catch {
+                setSystemStatus('Offline', 'text-red-300 font-bold');
+            }
         }
 
         function showToast(message, type = 'info') {
@@ -230,12 +242,13 @@
                 resourceSelect.appendChild(option);
             });
 
+            const origin = window.location.origin;
             document.getElementById('metaBox').innerHTML = `
                 <div>Service: <span class="text-white">${data.name}</span></div>
                 <div>Type: <span class="text-white">${data.serviceType}</span></div>
                 <div>Description: <span class="text-white">${data.description}</span></div>
                 <div>Expires At: <span class="text-white">${new Date(data.expiresAt).toLocaleString()}</span></div>
-                <div>Base API: <span class="text-white">/generated/${serviceId}</span></div>
+                <div>Base API: <span class="text-white">${origin}/generated/${serviceId}</span></div>
                 <div>Token: <span class="text-white">${token}</span></div>
             `;
             document.getElementById('statusConnected').textContent = 'Connected';
@@ -245,9 +258,7 @@
             document.getElementById('statusHealth').className = 'text-emerald-300';
 
             startCountdown(data.expiresAt);
-            suggestPayload();
-            refreshCurlPanel();
-            await loadRecords();
+            refreshPanels();
             showToast('Service connected', 'success');
         }
 
@@ -266,134 +277,90 @@
             document.getElementById('statusHealth').className = 'text-red-300';
             document.getElementById('resourceSelect').innerHTML = '';
             document.getElementById('metaBox').innerHTML = `<span class="text-red-400">${reason}</span>`;
-            document.getElementById('recordsContainer').innerHTML =
-                `<p class="text-red-400 text-center mt-10">${reason}</p>`;
-            refreshCurlPanel();
-        }
-
-        function setActionMode(mode) {
-            actionMode = mode;
-            const tabs = {
-                create: document.getElementById('tabCreate'),
-                update: document.getElementById('tabUpdate'),
-                delete: document.getElementById('tabDelete')
-            };
-            Object.entries(tabs).forEach(([key, el]) => {
-                if (key === mode) el.classList.add('active');
-                else el.classList.remove('active');
-            });
-
-            const recordIdWrap = document.getElementById('recordIdWrap');
-            const jsonInput = document.getElementById('jsonInput');
-            const actionBtn = document.getElementById('editorActionBtn');
-            const hint = document.getElementById('editorHint');
-
-            if (mode === 'create') {
-                recordIdWrap.classList.add('hidden');
-                jsonInput.classList.remove('opacity-60');
-                actionBtn.textContent = 'POST Create';
-                actionBtn.className = 'w-full mt-4 bg-cyan-700 hover:bg-cyan-600 text-white font-bold py-3 rounded transition';
-                hint.textContent = 'JSON object for selected resource:';
-            } else if (mode === 'update') {
-                recordIdWrap.classList.remove('hidden');
-                jsonInput.classList.remove('opacity-60');
-                actionBtn.textContent = 'PUT Update';
-                actionBtn.className = 'w-full mt-4 bg-amber-700 hover:bg-amber-600 text-white font-bold py-3 rounded transition';
-                hint.textContent = 'Enter Record ID and JSON fields to update:';
-            } else {
-                recordIdWrap.classList.remove('hidden');
-                jsonInput.classList.add('opacity-60');
-                actionBtn.textContent = 'DELETE Record';
-                actionBtn.className = 'w-full mt-4 bg-red-700 hover:bg-red-600 text-white font-bold py-3 rounded transition';
-                hint.textContent = 'Enter Record ID to delete (JSON not used):';
-            }
-            refreshCurlPanel();
-        }
-
-        async function submitRecordAction() {
-            if (actionMode === 'create') {
-                await createRecord();
-                return;
-            }
-            if (actionMode === 'update') {
-                await updateRecord();
-                return;
-            }
-            await deleteRecord();
-        }
-
-        function getSelectedResource() {
-            const resource = document.getElementById('resourceSelect').value;
-            if (!currentServiceId || !resource) {
-                showToast('Connect and select a resource first', 'error');
-                return null;
-            }
-            return resource;
-        }
-
-        function suggestPayload() {
-            if (!meta) return;
-            const key = document.getElementById('resourceSelect').value;
-            const resource = meta.resources.find((item) => item.key === key);
-            if (!resource) return;
-
-            const payload = {};
-            resource.fields.forEach((field) => {
-                if (field.type === 'string') payload[field.name] = `${field.name}-value`;
-                if (field.type === 'number') payload[field.name] = 1;
-                if (field.type === 'boolean') payload[field.name] = true;
-                if (field.type === 'object') payload[field.name] = { sample: true };
-            });
-            document.getElementById('jsonInput').value = JSON.stringify(payload, null, 2);
-            refreshCurlPanel();
+            document.getElementById('endpointsList').innerHTML = `<div class="text-red-400">${reason}</div>`;
+            resetFrontendUsage();
         }
 
         function getApiContext() {
             const serviceId = document.getElementById('serviceId').value.trim();
             const token = document.getElementById('serviceToken').value.trim();
             const resource = document.getElementById('resourceSelect').value;
-            const recordId = document.getElementById('recordIdInput').value.trim() || '{id}';
             const origin = window.location.origin;
-            return { serviceId, token, resource, recordId, origin };
+            return { serviceId, token, resource, origin };
         }
 
-        function escapeSingleQuotes(value) {
-            return String(value).replace(/'/g, `'\"'\"'`);
+        function resetFrontendUsage() {
+            document.getElementById('frontendBase').textContent = 'https://your-domain.com/generated/{serviceId}';
+            document.getElementById('frontendToken').textContent = 'x-service-token: {token}';
+            document.getElementById('frontendCreate').textContent = '# Connect service first';
+            document.getElementById('frontendList').textContent = '# Connect service first';
         }
 
-        function refreshCurlPanel() {
-            const { serviceId, token, resource, recordId, origin } = getApiContext();
-
-            const fallback = '# Connect service first';
+        function renderEndpoints() {
+            const { serviceId, token, resource, origin } = getApiContext();
+            const list = document.getElementById('endpointsList');
             if (!serviceId || !resource || !token) {
-                document.getElementById('curlMeta').textContent = fallback;
-                document.getElementById('curlList').textContent = fallback;
-                document.getElementById('curlCreate').textContent = fallback;
-                document.getElementById('curlUpdate').textContent = fallback;
-                document.getElementById('curlDelete').textContent = fallback;
+                list.innerHTML = '<div class="text-slate-500">Connect a service to see endpoints.</div>';
                 return;
             }
 
-            let rawPayload = document.getElementById('jsonInput').value.trim();
-            if (!rawPayload) rawPayload = '{}';
-
-            const quotedPayload = escapeSingleQuotes(rawPayload);
             const base = `${origin}/generated/${serviceId}/${resource}`;
-            const tokenHeader = `-H "x-service-token: ${token}"`;
+            const metaUrl = `${origin}/generated/${serviceId}/meta`;
+            const endpoints = [
+                { method: 'GET', label: 'META', url: metaUrl },
+                { method: 'GET', label: 'LIST', url: base },
+                { method: 'POST', label: 'CREATE', url: base },
+                { method: 'GET', label: 'READ', url: `${base}/{id}` },
+                { method: 'PUT', label: 'UPDATE', url: `${base}/{id}` },
+                { method: 'DELETE', label: 'DELETE', url: `${base}/{id}` }
+            ];
 
-            document.getElementById('curlMeta').textContent = `curl "${origin}/generated/${serviceId}/meta" ${tokenHeader}`;
-            document.getElementById('curlList').textContent = `curl "${base}" ${tokenHeader}`;
-            document.getElementById('curlCreate').textContent =
-                `curl -X POST "${base}" ${tokenHeader} -H "Content-Type: application/json" -d '${quotedPayload}'`;
-            document.getElementById('curlUpdate').textContent =
-                `curl -X PUT "${base}/${recordId}" ${tokenHeader} -H "Content-Type: application/json" -d '${quotedPayload}'`;
-            document.getElementById('curlDelete').textContent =
-                `curl -X DELETE "${base}/${recordId}" ${tokenHeader}`;
+            list.innerHTML = endpoints.map((item) => `
+                <div class="flex items-center justify-between bg-slate-950/80 border border-slate-800 rounded p-2 gap-2">
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <span class="text-emerald-300 font-bold">${item.method}</span>
+                        <span class="px-2 py-0.5 rounded bg-emerald-900/40 text-emerald-200 border border-emerald-800 text-[10px] tracking-wide">${item.label}</span>
+                        <span class="text-white break-words">${item.url}</span>
+                    </div>
+                    <button class="text-emerald-300 hover:text-emerald-200" onclick="copyText('${item.url}')">Copy</button>
+                </div>
+            `).join('');
         }
 
-        async function copyCurl(elementId) {
-            const text = document.getElementById(elementId).textContent || '';
-            if (!text || text.startsWith('#')) return;
+        function renderFrontendUsage() {
+            const { serviceId, token, resource, origin } = getApiContext();
+            if (!serviceId || !resource || !token) {
+                resetFrontendUsage();
+                return;
+            }
+
+            const base = `${origin}/generated/${serviceId}/${resource}`;
+            document.getElementById('frontendBase').textContent = `${origin}/generated/${serviceId}`;
+            document.getElementById('frontendToken').textContent = `x-service-token: ${token}`;
+            document.getElementById('frontendCreate').textContent =
+`fetch("${base}", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    "x-service-token": "${token}"
+  },
+  body: JSON.stringify({ name: "example" })
+})`;
+            document.getElementById('frontendList').textContent =
+`fetch("${base}", {
+  headers: {
+    "x-service-token": "${token}"
+  }
+})`;
+        }
+
+        function refreshPanels() {
+            renderEndpoints();
+            renderFrontendUsage();
+        }
+
+        async function copyText(text) {
+            if (!text) return;
             try {
                 await navigator.clipboard.writeText(text);
             } catch {
@@ -404,188 +371,23 @@
                 document.execCommand('copy');
                 document.body.removeChild(temp);
             }
-
             const status = document.getElementById('copyStatus');
-            status.textContent = `Copied: ${elementId}`;
-            showToast(`Copied ${elementId}`, 'success');
+            status.textContent = 'Copied';
+            showToast('Copied', 'success');
             clearTimeout(copyTimer);
             copyTimer = setTimeout(() => {
                 status.textContent = '';
             }, 1200);
         }
 
-        async function createRecord() {
-            const resource = getSelectedResource();
-            if (!resource) return;
+        document.getElementById('resourceSelect').addEventListener('change', refreshPanels);
+        document.getElementById('serviceId').addEventListener('input', refreshPanels);
+        document.getElementById('serviceToken').addEventListener('input', refreshPanels);
+        refreshPanels();
 
-            let payload;
-            try {
-                payload = JSON.parse(document.getElementById('jsonInput').value);
-            } catch {
-                showToast('Invalid JSON payload', 'error');
-                return;
-            }
-
-            const res = await fetch(`/generated/${currentServiceId}/${resource}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'x-service-token': currentToken },
-                body: JSON.stringify(payload)
-            });
-            const data = await res.json();
-            if (!res.ok) {
-                if (res.status === 404 || res.status === 410) {
-                    disconnectState(data.message || data.error || 'Service expired or destroyed');
-                }
-                showToast(data.error || 'Create failed', 'error');
-                return;
-            }
-
-            document.getElementById('recordIdInput').value = data.data?.id || '';
-            refreshCurlPanel();
-            await loadRecords();
-            showToast('Record created', 'success');
-        }
-
-        async function loadRecords() {
-            const resource = getSelectedResource();
-            if (!resource) return;
-
-            const res = await fetch(`/generated/${currentServiceId}/${resource}`, {
-                headers: { 'x-service-token': currentToken }
-            });
-            const data = await res.json();
-            const container = document.getElementById('recordsContainer');
-            container.innerHTML = '';
-
-            if (!res.ok) {
-                if (res.status === 404 || res.status === 410) {
-                    disconnectState(data.message || data.error || 'Service expired or destroyed');
-                    return;
-                }
-                container.innerHTML = `<p class="text-red-400">${data.error || 'Failed to load records'}</p>`;
-                document.getElementById('statusHealth').textContent = 'Degraded';
-                document.getElementById('statusHealth').className = 'text-yellow-300';
-                return;
-            }
-            document.getElementById('statusHealth').textContent = 'Healthy';
-            document.getElementById('statusHealth').className = 'text-emerald-300';
-
-            if (!data.data || data.data.length === 0) {
-                container.innerHTML = '<p class="text-gray-600 text-center mt-10">No records found.</p>';
-                return;
-            }
-
-            const rows = data.data.map((record) => {
-                const payload = { ...record };
-                delete payload.id;
-                const created = record.createdAt ? new Date(record.createdAt).toLocaleTimeString() : '--';
-                const updated = record.updatedAt ? new Date(record.updatedAt).toLocaleTimeString() : '--';
-                return `
-                    <tr class="border-b border-gray-800 hover:bg-gray-900/50 cursor-pointer" onclick="selectRecord(${record.id})">
-                        <td class="px-3 py-2 text-cyan-300">${record.id}</td>
-                        <td class="px-3 py-2 text-gray-300">${created}</td>
-                        <td class="px-3 py-2 text-gray-300">${updated}</td>
-                        <td class="px-3 py-2 text-blue-300"><pre class="text-xs overflow-x-auto">${JSON.stringify(payload, null, 2)}</pre></td>
-                    </tr>
-                `;
-            }).join('');
-
-            container.innerHTML = `
-                <table class="records-table w-full text-xs border border-gray-800 rounded overflow-hidden">
-                    <thead>
-                        <tr class="text-left text-gray-400 border-b border-gray-800">
-                            <th class="px-3 py-2 w-16">ID</th>
-                            <th class="px-3 py-2 w-28">Created</th>
-                            <th class="px-3 py-2 w-28">Updated</th>
-                            <th class="px-3 py-2">Payload</th>
-                        </tr>
-                    </thead>
-                    <tbody>${rows}</tbody>
-                </table>
-            `;
-        }
-
-        function selectRecord(id) {
-            document.getElementById('recordIdInput').value = id;
-            if (actionMode === 'create') {
-                setActionMode('update');
-            }
-            refreshCurlPanel();
-        }
-
-        async function updateRecord() {
-            const resource = getSelectedResource();
-            if (!resource) return;
-
-            const recordId = document.getElementById('recordIdInput').value.trim();
-            if (!recordId) {
-                showToast('Enter record ID for update', 'error');
-                return;
-            }
-
-            let payload;
-            try {
-                payload = JSON.parse(document.getElementById('jsonInput').value);
-            } catch {
-                showToast('Invalid JSON payload', 'error');
-                return;
-            }
-
-            const res = await fetch(`/generated/${currentServiceId}/${resource}/${recordId}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json', 'x-service-token': currentToken },
-                body: JSON.stringify(payload)
-            });
-            const data = await res.json();
-            if (!res.ok) {
-                if (res.status === 404 || res.status === 410) {
-                    disconnectState(data.message || data.error || 'Service expired or destroyed');
-                }
-                showToast(data.error || 'Update failed', 'error');
-                return;
-            }
-            refreshCurlPanel();
-            await loadRecords();
-            showToast('Record updated', 'success');
-        }
-
-        async function deleteRecord() {
-            const resource = getSelectedResource();
-            if (!resource) return;
-
-            const recordId = document.getElementById('recordIdInput').value.trim();
-            if (!recordId) {
-                showToast('Enter record ID for delete', 'error');
-                return;
-            }
-
-            const res = await fetch(`/generated/${currentServiceId}/${resource}/${recordId}`, {
-                method: 'DELETE',
-                headers: { 'x-service-token': currentToken }
-            });
-            const data = await res.json();
-            if (!res.ok) {
-                if (res.status === 404 || res.status === 410) {
-                    disconnectState(data.message || data.error || 'Service expired or destroyed');
-                }
-                showToast(data.error || 'Delete failed', 'error');
-                return;
-            }
-            refreshCurlPanel();
-            await loadRecords();
-            showToast('Record deleted', 'success');
-        }
-
-        document.getElementById('resourceSelect').addEventListener('change', () => {
-            suggestPayload();
-            loadRecords();
-        });
-        document.getElementById('jsonInput').addEventListener('input', refreshCurlPanel);
-        document.getElementById('recordIdInput').addEventListener('input', refreshCurlPanel);
-        document.getElementById('serviceId').addEventListener('input', refreshCurlPanel);
-        document.getElementById('serviceToken').addEventListener('input', refreshCurlPanel);
-        setActionMode('create');
-        refreshCurlPanel();
+        loadSystemHealth();
+        if (systemHealthTimer) clearInterval(systemHealthTimer);
+        systemHealthTimer = setInterval(loadSystemHealth, 30000);
     </script>
 </body>
 </html>
