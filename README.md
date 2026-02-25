@@ -46,20 +46,18 @@ This project removes that friction:
 
 ### Architecture Diagram
 
-```mermaid
-flowchart LR
-    A[Frontend Builder UI\npublic/index.html] -->|POST /ai/build| B[AI Controller]
-    B -->|Prompt->Spec| C[Gemini API]
-    B -->|Persist service + spec| D[(PostgreSQL)]
-    B -->|Generate artifacts| E[Scaffold Generator]
-    B -->|Schedule TTL cleanup| F[BullMQ Queue]
-    F --> G[Cleanup Worker]
-    G -->|Destroy expired service data| D
+![Architecture Diagram](Bob the builder Architecture diagram.png)
 
-    H[Dashboard UI\npublic/dashboard.html] -->|Token-auth CRUD| I[Generated Routes]
-    I -->|validateService + requireServiceToken + rateLimit| J[Generated Controller]
-    J -->|Read/Write JSON payload records| D
-```
+Bob-the-Builder converts natural language prompts into fully functional backend services.
+
+1. The user submits a prompt from the frontend UI.
+2. The `/ai/build` endpoint receives the request and forwards it to the AI controller.
+3. The AI controller sends the prompt to Gemini, validates the generated spec, and stores it in PostgreSQL.
+4. Based on the stored service spec, dynamic REST routes (`/generated/:serviceId/*`) are created at runtime.
+5. Users can interact with these generated APIs through the dashboard UI.
+6. A BullMQ background worker automatically cleans up expired services after their TTL.
+
+This architecture allows users to instantly generate and test backend APIs using plain English while maintaining structured validation and persistence.
 
 ### Component Responsibilities
 
