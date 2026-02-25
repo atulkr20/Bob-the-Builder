@@ -46,7 +46,7 @@ This project removes that friction:
 
 ### Architecture Diagram
 
-![Architecture Diagram](Bob the builder Architecture diagram.png)
+![Architecture Diagram](Bob%20the%20builder%20Architecture%20diagram.png)
 
 Bob-the-Builder converts natural language prompts into fully functional backend services.
 
