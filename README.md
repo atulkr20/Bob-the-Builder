@@ -90,6 +90,8 @@ REDIS_HOST=localhost
 REDIS_PORT=6379
 ```
 
+Tip: copy `.env.example` to `.env` and fill only the values you need.
+
 ### 3) Setup DB
 
 ```bash
@@ -146,6 +148,22 @@ What it verifies:
 - update persists
 - delete works
 - record no longer present after delete
+
+## Generated Folder Cleanup
+
+Generated backend artifacts are useful for demo and handoff, but they can grow quickly.
+
+- Keep latest 3 artifacts:
+
+```bash
+npm run generated:prune
+```
+
+- Keep latest 5 artifacts:
+
+```bash
+npm run generated:prune:keep5
+```
 
 ## Measurable Outcomes (Current Baseline)
 

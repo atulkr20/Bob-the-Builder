@@ -3,14 +3,16 @@ import { Redis } from 'ioredis';
 import dotenv from 'dotenv';
 dotenv.config();
 
-// Connecting to Redis
-const connection = new Redis({
+const redisOptions = {
     host: process.env.REDIS_HOST || 'localhost',
     port: Number(process.env.REDIS_PORT) || 6379,
-    password: process.env.REDIS_PASSWORD || undefined,
-    tls: process.env.REDIS_TLS === 'true' ? {} : undefined,
-    maxRetriesPerRequest: null // This is required by BullMQ
-});
+    maxRetriesPerRequest: null,
+    ...(process.env.REDIS_PASSWORD ? { password: process.env.REDIS_PASSWORD } : {}),
+    ...(process.env.REDIS_TLS === 'true' ? { tls: {} } : {})
+};
+
+// Connecting to Redis
+const connection = new Redis(redisOptions);
 
 // Creating the Queue
 

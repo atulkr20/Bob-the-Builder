@@ -15,7 +15,9 @@
     "dev": "tsx watch src/server.ts",
     "start": "node --import tsx src/server.ts",
     "start:worker": "node --import tsx src/queue/cleanup.worker.ts",
-    "smoke:test": "node scripts/smoke-test.mjs"
+    "smoke:test": "node scripts/smoke-test.mjs",
+    "generated:prune": "node scripts/prune-generated.mjs",
+    "generated:prune:keep5": "node scripts/prune-generated.mjs 5"
   },
   "keywords": [],
   "author": "",
