@@ -3,160 +3,1011 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bob the Builder // AI Architect</title>
+    <title>Bob the Builder | Instant Ephemeral Backends</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
-        body { font-family: 'JetBrains Mono', monospace; }
-        .glow { box-shadow: 0 0 15px rgba(74, 222, 128, 0.5); }
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap');
+        
+        * { font-family: 'Space Grotesk', sans-serif; }
+        
+        body {
+            background-color: #080808;
+            color: #e5e7eb;
+            overflow-x: hidden;
+        }
+
+        .bg-gradient-orange {
+            background: linear-gradient(135deg, #f97316 0%, #eab308 100%);
+        }
+
+        .text-gradient-orange {
+            background: linear-gradient(90deg, #f97316 0%, #eab308 50%, #84cc16 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .text-gradient-orange-amber {
+            background: linear-gradient(90deg, #f97316 0%, #eab308 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-16px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideInLeft {
+            from { opacity: 0; transform: translateX(-30px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(30px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes scaleInUp {
+            from { opacity: 0; transform: scale(0.92); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { opacity: 0.75; }
+            50% { opacity: 1; }
+        }
+
+        @keyframes scan-line {
+            0% { top: 0%; }
+            100% { top: 100%; }
+        }
+
+        @keyframes marquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+        }
+
+        .animate-fade-in { animation: fadeIn 0.6s ease-out; }
+        .animate-fade-in-up { animation: fadeInUp 0.8s ease-out; }
+        .animate-fade-in-down { animation: fadeInDown 0.6s ease-out; }
+        .animate-slide-in-left { animation: slideInLeft 0.6s ease-out; }
+        .animate-slide-in-right { animation: slideInRight 0.6s ease-out; }
+        .animate-scale-in { animation: scaleInUp 0.7s ease-out; }
+        .animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+        .animate-scan-line { animation: scan-line 8s linear infinite; }
+        .animate-marquee { animation: marquee 18s linear infinite; }
+        .animate-float { animation: float 2s ease-in-out infinite; }
+
+        /* Noise texture */
+        .noise-overlay {
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+            background-repeat: repeat;
+            background-size: 200px 200px;
+            opacity: 0.025;
+        }
+
+        /* Dot grid */
+        .dot-grid {
+            background-image: radial-gradient(circle, #333 1px, transparent 1px);
+            background-size: 28px 28px;
+            opacity: 0.18;
+        }
+
+        /* Glow effects */
+        .glow-orange {
+            box-shadow: 0 0 40px rgba(249, 115, 22, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        .glow-orange-sm {
+            box-shadow: 0 0 20px rgba(249, 115, 22, 0.35);
+        }
+
+        /* Feature cards */
+        .feature-card {
+            background: #0a0a0a;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            border-color: rgba(249, 115, 22, 0.3);
+            transform: translateY(-5px);
+        }
+
+        /* Code block */
+        .code-block {
+            background: #0a0a0a;
+            border: 1px solid rgba(249, 115, 22, 0.2);
+            border-radius: 1rem;
+            position: relative;
+        }
+
+        .code-block::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(249, 115, 22, 0.5), transparent);
+        }
+
+        .code-line {
+            animation: fadeInUp 0.3s ease-out backwards;
+        }
+
+        /* Modal */
+        .modal-backdrop {
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .modal-content {
+            animation: scaleInUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .nav-link {
+            color: #a3a3a3;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .nav-link:hover {
+            color: #fb923c;
+        }
+
+        /* Construction marks */
+        .construction-mark {
+            opacity: 0.3;
+        }
+
+        /* Step cards */
+        .step-card {
+            text-align: center;
+        }
+
+        .step-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 3.5rem;
+            height: 3.5rem;
+            border-radius: 1rem;
+            background: #0a0a0a;
+            margin-bottom: 1.25rem;
+            font-size: 1.25rem;
+            font-weight: bold;
+            border: 1px solid;
+        }
+
+        /* Use case cards */
+        .use-case-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .use-case-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(249, 115, 22, 0.3);
+        }
+
+        /* Footer */
+        .footer-indicator {
+            display: inline-flex;
+            align-items: center;
+            height: 0.375rem;
+            width: 0.375rem;
+        }
+
+        .footer-indicator::before {
+            content: '';
+            position: absolute;
+            display: inline-flex;
+            height: 100%;
+            width: 100%;
+            border-radius: 9999px;
+            background: #22c55e;
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+
+        /* Input styles */
+        .input-field {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: white;
+            border-radius: 0.75rem;
+            padding: 0.75rem 1rem;
+            font-size: 0.875rem;
+            transition: all 0.3s;
+        }
+
+        .input-field::placeholder {
+            color: #666;
+        }
+
+        .input-field:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(249, 115, 22, 0.5);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            h1 { font-size: 2.25rem; }
+            h2 { font-size: 2rem; }
+        }
     </style>
 </head>
-<body class="bg-gray-950 text-gray-100 min-h-screen flex flex-col items-center justify-center p-4">
+<body>
+    <!-- Noise Overlay -->
+    <div class="noise-overlay fixed inset-0 z-[100] pointer-events-none"></div>
 
-    <div class="mb-10 text-center">
-        <h1 class="text-5xl font-bold text-green-400 mb-2">Bob the Builder</h1>
-        <p class="text-gray-500">AI-Powered Ephemeral Infrastructure</p>
-    </div>
+    <!-- Scan Line -->
+    <div class="animate-scan-line fixed left-0 right-0 h-px bg-gradient-to-r from-transparent via-orange-500/20 to-transparent z-50 pointer-events-none"></div>
 
-    <div class="w-full max-w-2xl">
-        <div class="bg-gray-900 p-1 rounded-lg border border-gray-700 glow transition-all focus-within:border-green-500">
-            <form id="aiForm" class="flex items-center">
-                <span class="pl-4 text-green-500 text-xl">></span>
-                <input type="text" id="promptInput"
-                    placeholder="Describe your backend (e.g., IoT logger with deviceId and payload for 10 mins)"
-                    class="w-full bg-transparent p-4 outline-none text-white placeholder-gray-600" autocomplete="off">
-                <button type="submit" id="buildBtn"
-                    class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-md font-bold mr-2 transition">
-                    BUILD
+    <!-- Navigation -->
+    <nav class="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-12 py-4 border-b border-orange-500 border-opacity-12 backdrop-blur-md animate-fade-in-down"
+        style="background: rgba(8, 8, 8, 0.85);">
+        <div class="flex items-center gap-2.5">
+            <div class="bg-gradient-orange w-8 h-8 rounded-lg flex items-center justify-center relative">
+                <i class="fas fa-hard-hat w-4 h-4 text-black text-sm"></i>
+                <div class="absolute inset-0 rounded-lg blur-md opacity-60 bg-gradient-orange"></div>
+            </div>
+            <span class="font-black text-white text-lg tracking-tight">
+                Bob <span class="text-orange-400">the Builder</span>
+            </span>
+        </div>
+
+        <div class="hidden md:flex items-center gap-7 text-sm font-medium">
+            <a href="#features" class="nav-link">Features</a>
+            <a href="#how-it-works" class="nav-link">How it works</a>
+            <a href="#demo" class="nav-link">Demo</a>
+        </div>
+
+        <button onclick="openSignupModal()" class="bg-gradient-orange hover:opacity-90 text-black px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-all glow-orange-sm">
+            <i class="fas fa-play text-xs"></i>
+            Try it now
+        </button>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="relative min-h-screen flex items-center justify-center px-6 pt-20 overflow-hidden">
+        <!-- Dot Grid -->
+        <div class="dot-grid absolute inset-0"></div>
+
+        <!-- Construction Marks -->
+        <div class="absolute top-8 left-8 w-6 h-6 construction-mark" style="border-top: 1px solid #f97316; border-left: 1px solid #f97316;"></div>
+        <div class="absolute top-8 right-8 w-6 h-6 construction-mark" style="border-top: 1px solid #f97316; border-right: 1px solid #f97316;"></div>
+        <div class="absolute bottom-8 left-8 w-6 h-6 construction-mark" style="border-bottom: 1px solid #f97316; border-left: 1px solid #f97316;"></div>
+        <div class="absolute bottom-8 right-8 w-6 h-6 construction-mark" style="border-bottom: 1px solid #f97316; border-right: 1px solid #f97316;"></div>
+
+        <!-- Glow Orbs -->
+        <div class="absolute top-1/3 left-1/2 -translate-x-1/2 w-[900px] h-[600px] rounded-full pointer-events-none opacity-20"
+            style="background: radial-gradient(ellipse, #f97316 0%, transparent 70%); filter: blur(80px);"></div>
+        <div class="absolute bottom-0 left-0 w-[500px] h-[400px] rounded-full pointer-events-none opacity-10"
+            style="background: radial-gradient(ellipse, #84cc16 0%, transparent 70%); filter: blur(100px);"></div>
+
+        <!-- Content -->
+        <div class="relative z-10 max-w-6xl mx-auto text-center">
+            <!-- Badge -->
+            <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold mb-8 animate-fade-in-up"
+                style="border: 1px solid rgba(249, 115, 22, 0.35); background: rgba(249, 115, 22, 0.1); color: #fb923c;">
+                <i class="fas fa-sparkles text-xs"></i>
+                Powered by Gemini AI · Zero infra to manage
+            </div>
+
+            <!-- Headline -->
+            <h1 class="text-6xl md:text-7xl lg:text-8xl font-black tracking-tighter leading-[0.88] mb-6 animate-fade-in-up"
+                style="animation-delay: 0.2s;">
+                <span class="text-white block">Backend APIs,</span>
+                <span class="text-gradient-orange block">Built in seconds.</span>
+            </h1>
+
+            <!-- Subtitle -->
+            <p class="text-neutral-400 text-xl md:text-2xl max-w-2xl mx-auto leading-relaxed mb-10 font-light animate-fade-in-up"
+                style="animation-delay: 0.4s;">
+                Describe your API in plain English. Bob generates a <span class="text-white font-medium">live, callable HTTPS endpoint</span> — powered by Gemini — then vanishes when you're done.
+            </p>
+
+            <!-- CTAs -->
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-20 animate-fade-in-up"
+                style="animation-delay: 0.55s;">
+                <button onclick="openSignupModal()" class="flex items-center gap-2.5 px-7 py-4 rounded-2xl text-black font-black text-base bg-gradient-orange glow-orange hover:opacity-90 transition-all">
+                    <i class="fas fa-wrench text-sm"></i>
+                    Start Building Free
+                    <i class="fas fa-arrow-right text-sm"></i>
                 </button>
-            </form>
+                <a href="#how-it-works" class="flex items-center gap-2.5 px-7 py-4 rounded-2xl font-semibold text-base text-neutral-300 border border-white border-opacity-10 hover:border-opacity-30 transition-all">
+                    <i class="fas fa-play text-sm"></i>
+                    See how it works
+                </a>
+            </div>
+
+            <!-- Stats -->
+            <div class="flex flex-wrap items-center justify-center gap-12 text-center animate-fade-in"
+                style="animation-delay: 0.9s;">
+                <div class="flex flex-col items-center gap-1">
+                    <span class="text-3xl font-black text-gradient-orange-amber counter" data-target="5">0</span>
+                    <span class="text-neutral-600 text-xs font-semibold uppercase tracking-widest">Avg. generation time</span>
+                </div>
+                <div class="flex flex-col items-center gap-1">
+                    <span class="text-3xl font-black text-gradient-orange-amber">100<span class="text-white">%</span></span>
+                    <span class="text-neutral-600 text-xs font-semibold uppercase tracking-widest">Auto-cleanup</span>
+                </div>
+                <div class="flex flex-col items-center gap-1">
+                    <span class="text-3xl font-black text-gradient-orange-amber">0</span>
+                    <span class="text-neutral-600 text-xs font-semibold uppercase tracking-widest">Config needed</span>
+                </div>
+            </div>
         </div>
-        <p class="text-xs text-gray-600 mt-2 text-center">Powered by Google Gemini - Auto-destructs on timer</p>
-    </div>
 
-    <div class="w-full max-w-2xl mt-4 bg-gray-900/70 border border-gray-800 rounded-lg p-4 text-xs text-gray-300">
-        <p class="text-green-400 font-bold mb-2">How To Use (3 Steps)</p>
-        <ol class="list-decimal ml-4 space-y-1">
-            <li>Describe your backend and click <span class="text-white font-bold">BUILD</span>.</li>
-            <li>Copy <span class="text-white">LIVE API</span> endpoints or open the dashboard link.</li>
-            <li>In your frontend, call the shown API URLs directly to send and fetch data.</li>
-        </ol>
-    </div>
+        <!-- Scroll Cue -->
+        <div class="absolute bottom-10 left-1/2 -translate-x-1/2 animate-float">
+            <i class="fas fa-chevron-down w-5 h-5 text-neutral-700"></i>
+        </div>
+    </section>
 
-    <div id="buildTimer" class="w-full max-w-2xl mt-4 hidden bg-gray-900 border border-gray-700 rounded-lg p-3 text-sm">
-        Service countdown: <span id="buildTimerValue" class="text-yellow-300 font-bold">--:--:--</span>
-    </div>
-
-    <div id="terminal" class="w-full max-w-2xl mt-8 hidden">
-        <div class="bg-black rounded-lg border border-gray-800 p-4 font-mono text-sm h-64 overflow-y-auto">
-            <div id="logs" class="space-y-2"></div>
+    <!-- Marquee Strip -->
+    <div class="relative py-4 overflow-hidden border-y border-orange-500 border-opacity-15"
+        style="background: rgba(249, 115, 22, 0.04);">
+        <div class="animate-marquee flex gap-12 whitespace-nowrap">
+            <div class="flex gap-12 items-center">
+                <div class="flex items-center gap-3 text-sm font-semibold text-neutral-600 uppercase tracking-widest">
+                    <span class="w-1 h-1 rounded-full bg-orange-500"></span>
+                    AI-Generated Endpoints
+                </div>
+                <div class="flex items-center gap-3 text-sm font-semibold text-neutral-600 uppercase tracking-widest">
+                    <span class="w-1 h-1 rounded-full bg-orange-500"></span>
+                    Zero Infrastructure
+                </div>
+                <div class="flex items-center gap-3 text-sm font-semibold text-neutral-600 uppercase tracking-widest">
+                    <span class="w-1 h-1 rounded-full bg-orange-500"></span>
+                    Gemini Powered
+                </div>
+                <div class="flex items-center gap-3 text-sm font-semibold text-neutral-600 uppercase tracking-widest">
+                    <span class="w-1 h-1 rounded-full bg-orange-500"></span>
+                    Self-Destructing APIs
+                </div>
+                <div class="flex items-center gap-3 text-sm font-semibold text-neutral-600 uppercase tracking-widest">
+                    <span class="w-1 h-1 rounded-full bg-orange-500"></span>
+                    Instant Prototyping
+                </div>
+                <div class="flex items-center gap-3 text-sm font-semibold text-neutral-600 uppercase tracking-widest">
+                    <span class="w-1 h-1 rounded-full bg-orange-500"></span>
+                    No Config Needed
+                </div>
+            </div>
+            <div class="flex gap-12 items-center">
+                <div class="flex items-center gap-3 text-sm font-semibold text-neutral-600 uppercase tracking-widest">
+                    <span class="w-1 h-1 rounded-full bg-orange-500"></span>
+                    AI-Generated Endpoints
+                </div>
+                <div class="flex items-center gap-3 text-sm font-semibold text-neutral-600 uppercase tracking-widest">
+                    <span class="w-1 h-1 rounded-full bg-orange-500"></span>
+                    Zero Infrastructure
+                </div>
+                <div class="flex items-center gap-3 text-sm font-semibold text-neutral-600 uppercase tracking-widest">
+                    <span class="w-1 h-1 rounded-full bg-orange-500"></span>
+                    Gemini Powered
+                </div>
+                <div class="flex items-center gap-3 text-sm font-semibold text-neutral-600 uppercase tracking-widest">
+                    <span class="w-1 h-1 rounded-full bg-orange-500"></span>
+                    Self-Destructing APIs
+                </div>
+                <div class="flex items-center gap-3 text-sm font-semibold text-neutral-600 uppercase tracking-widest">
+                    <span class="w-1 h-1 rounded-full bg-orange-500"></span>
+                    Instant Prototyping
+                </div>
+                <div class="flex items-center gap-3 text-sm font-semibold text-neutral-600 uppercase tracking-widest">
+                    <span class="w-1 h-1 rounded-full bg-orange-500"></span>
+                    No Config Needed
+                </div>
+            </div>
         </div>
     </div>
 
+    <!-- Features Section -->
+    <section id="features" class="relative py-32 px-6 border-t border-white border-opacity-5">
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-16 animate-fade-in-up">
+                <span class="text-xs font-black uppercase tracking-[0.25em] text-orange-500">
+                    Features
+                </span>
+                <h2 class="text-4xl md:text-5xl font-black text-white mt-3 mb-4 tracking-tight">
+                    Everything you need,<br>
+                    <span class="text-gradient-orange">nothing you don't.</span>
+                </h2>
+                <p class="text-neutral-500 text-lg max-w-xl mx-auto">
+                    No boilerplate. No config. No leftover infrastructure. Just a working API when you need it.
+                </p>
+            </div>
+
+            <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Feature Card 1 -->
+                <div class="feature-card p-6 rounded-2xl">
+                    <div class="inline-flex p-2.5 rounded-xl mb-4 bg-orange-500 bg-opacity-15 text-orange-400">
+                        <i class="fas fa-microchip w-5 h-5"></i>
+                    </div>
+                    <h3 class="text-white font-semibold text-lg mb-2">AI-Powered Generation</h3>
+                    <p class="text-neutral-500 text-sm leading-relaxed">Describe your API in natural language. Gemini understands context, infers data shapes, and wires up real HTTP routes.</p>
+                </div>
+
+                <!-- Feature Card 2 -->
+                <div class="feature-card p-6 rounded-2xl">
+                    <div class="inline-flex p-2.5 rounded-xl mb-4 bg-amber-500 bg-opacity-15 text-amber-400">
+                        <i class="fas fa-bolt w-5 h-5"></i>
+                    </div>
+                    <h3 class="text-white font-semibold text-lg mb-2">Live in Seconds</h3>
+                    <p class="text-neutral-500 text-sm leading-relaxed">No deploy pipelines. No waiting. Your endpoint is live and callable from any frontend the moment Bob finishes.</p>
+                </div>
+
+                <!-- Feature Card 3 -->
+                <div class="feature-card p-6 rounded-2xl">
+                    <div class="inline-flex p-2.5 rounded-xl mb-4 bg-lime-500 bg-opacity-15 text-lime-400">
+                        <i class="fas fa-clock w-5 h-5"></i>
+                    </div>
+                    <h3 class="text-white font-semibold text-lg mb-2">Time-Limited Infra</h3>
+                    <p class="text-neutral-500 text-sm leading-relaxed">Endpoints expire automatically. Set a duration and Bob self-destructs — no lingering test servers, no cloud bill surprises.</p>
+                </div>
+
+                <!-- Feature Card 4 -->
+                <div class="feature-card p-6 rounded-2xl">
+                    <div class="inline-flex p-2.5 rounded-xl mb-4 bg-red-500 bg-opacity-15 text-red-400">
+                        <i class="fas fa-trash w-5 h-5"></i>
+                    </div>
+                    <h3 class="text-white font-semibold text-lg mb-2">Zero Residue Cleanup</h3>
+                    <p class="text-neutral-500 text-sm leading-relaxed">When time runs out, all data, routes, and infrastructure are purged at the database level. Nothing is left behind.</p>
+                </div>
+
+                <!-- Feature Card 5 -->
+                <div class="feature-card p-6 rounded-2xl">
+                    <div class="inline-flex p-2.5 rounded-xl mb-4 bg-sky-500 bg-opacity-15 text-sky-400">
+                        <i class="fas fa-globe w-5 h-5"></i>
+                    </div>
+                    <h3 class="text-white font-semibold text-lg mb-2">Publicly Callable URLs</h3>
+                    <p class="text-neutral-500 text-sm leading-relaxed">Every generated endpoint is a real HTTPS URL — fetch it from React, Vue, Flutter, or plain curl. No CORS headaches.</p>
+                </div>
+
+                <!-- Feature Card 6 -->
+                <div class="feature-card p-6 rounded-2xl">
+                    <div class="inline-flex p-2.5 rounded-xl mb-4 bg-violet-500 bg-opacity-15 text-violet-400">
+                        <i class="fas fa-shield-alt w-5 h-5"></i>
+                    </div>
+                    <h3 class="text-white font-semibold text-lg mb-2">Privacy by Design</h3>
+                    <p class="text-neutral-500 text-sm leading-relaxed">No permanent storage of your schemas or payloads. Data exists only for the session, then vanishes irreversibly.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section id="how-it-works" class="relative py-32 px-6 border-t border-white border-opacity-5">
+        <div class="absolute top-0 left-0 right-0 h-px"
+            style="background: linear-gradient(90deg, transparent, rgba(249, 115, 22, 0.3), transparent);"></div>
+
+        <div class="relative max-w-6xl mx-auto">
+            <div class="text-center mb-20 animate-fade-in-up">
+                <span class="text-xs font-black uppercase tracking-[0.25em] text-yellow-500">
+                    Process
+                </span>
+                <h2 class="text-4xl md:text-5xl font-black text-white mt-3 mb-4 tracking-tight">
+                    Three steps to a live API
+                </h2>
+                <p class="text-neutral-500 text-lg max-w-xl mx-auto">
+                    No account required. No credit card. No infrastructure knowledge.
+                </p>
+            </div>
+
+            <div class="relative grid md:grid-cols-3 gap-12 md:gap-6">
+                <!-- Step Line -->
+                <div class="hidden md:block absolute top-7 left-[calc(16.66%+32px)] right-[calc(16.66%+32px)] h-px border-t border-dashed"
+                    style="border-color: rgba(249, 115, 22, 0.2);"></div>
+
+                <!-- Step 1 -->
+                <div class="step-card animate-fade-in-up">
+                    <div class="step-number border-orange-500 border-opacity-40">01</div>
+                    <h3 class="text-white font-semibold text-lg mb-2">Describe your API</h3>
+                    <p class="text-neutral-500 text-sm leading-relaxed">Tell Bob what endpoints you need in plain English. Mention auth, mock data, schemas — anything.</p>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="step-card animate-fade-in-up" style="animation-delay: 0.15s;">
+                    <div class="step-number border-amber-500 border-opacity-40">02</div>
+                    <h3 class="text-white font-semibold text-lg mb-2">Bob generates it</h3>
+                    <p class="text-neutral-500 text-sm leading-relaxed">Gemini AI interprets your spec, creates real route handlers, and spins up a live HTTPS endpoint.</p>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="step-card animate-fade-in-up" style="animation-delay: 0.3s;">
+                    <div class="step-number border-lime-500 border-opacity-40">03</div>
+                    <h3 class="text-white font-semibold text-lg mb-2">Use & forget</h3>
+                    <p class="text-neutral-500 text-sm leading-relaxed">Copy your base URL, hit the endpoints from your frontend, and when the timer expires — it all disappears.</p>
+                </div>
+            </div>
+
+            <!-- Flow Diagram -->
+            <div class="mt-20 flex flex-wrap items-center justify-center gap-3 animate-fade-in"
+                style="animation-delay: 0.4s;">
+                <div class="flex flex-col items-center gap-2 px-4 py-3 rounded-xl border border-orange-500 border-opacity-30 bg-orange-500 bg-opacity-8 text-orange-400">
+                    <i class="fas fa-code w-5 h-5"></i>
+                    <span class="text-xs font-bold">Your Spec</span>
+                </div>
+                <i class="fas fa-arrow-right text-neutral-700"></i>
+                <div class="flex flex-col items-center gap-2 px-4 py-3 rounded-xl border border-amber-500 border-opacity-30 bg-amber-500 bg-opacity-8 text-amber-400">
+                    <i class="fas fa-microchip w-5 h-5"></i>
+                    <span class="text-xs font-bold">Gemini AI</span>
+                </div>
+                <i class="fas fa-arrow-right text-neutral-700"></i>
+                <div class="flex flex-col items-center gap-2 px-4 py-3 rounded-xl border border-lime-500 border-opacity-30 bg-lime-500 bg-opacity-8 text-lime-400">
+                    <i class="fas fa-database w-5 h-5"></i>
+                    <span class="text-xs font-bold">Live Endpoint</span>
+                </div>
+                <i class="fas fa-arrow-right text-neutral-700"></i>
+                <div class="flex flex-col items-center gap-2 px-4 py-3 rounded-xl border border-sky-500 border-opacity-30 bg-sky-500 bg-opacity-8 text-sky-400">
+                    <i class="fas fa-code-branch w-5 h-5"></i>
+                    <span class="text-xs font-bold">Your Frontend</span>
+                </div>
+                <i class="fas fa-arrow-right text-neutral-700"></i>
+                <div class="flex flex-col items-center gap-2 px-4 py-3 rounded-xl border border-red-500 border-opacity-30 bg-red-500 bg-opacity-8 text-red-400">
+                    <i class="fas fa-trash w-5 h-5"></i>
+                    <span class="text-xs font-bold">Auto-Cleanup</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Demo Section -->
+    <section id="demo" class="relative py-32 px-6 border-t border-white border-opacity-5">
+        <!-- Orange glow -->
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[500px] pointer-events-none"
+            style="background: radial-gradient(ellipse, rgba(249, 115, 22, 0.06) 0%, transparent 70%); filter: blur(40px);"></div>
+
+        <div class="relative max-w-6xl mx-auto">
+            <div class="grid lg:grid-cols-2 gap-16 items-center">
+                <!-- Left Content -->
+                <div class="animate-slide-in-left">
+                    <span class="text-xs font-black uppercase tracking-[0.25em] text-lime-500">
+                        Live Demo
+                    </span>
+                    <h2 class="text-4xl md:text-5xl font-black text-white mt-3 mb-5 tracking-tight leading-tight">
+                        From description<br>
+                        <span class="text-gradient-orange">to endpoint — fast.</span>
+                    </h2>
+                    <p class="text-neutral-500 text-lg leading-relaxed mb-8">
+                        Write a few lines. Bob reads your intent, generates real handlers with realistic mock data, and hands you a URL you can call right now.
+                    </p>
+
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-lg border border-white border-opacity-7 bg-white bg-opacity-3 flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-terminal text-orange-400 w-4 h-4"></i>
+                            </div>
+                            <span class="text-neutral-400 text-sm">Paste into fetch(), axios, or curl immediately</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-lg border border-white border-opacity-7 bg-white bg-opacity-3 flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-clock text-amber-400 w-4 h-4"></i>
+                            </div>
+                            <span class="text-neutral-400 text-sm">Countdown timer shows remaining endpoint lifetime</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-lg border border-white border-opacity-7 bg-white bg-opacity-3 flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-trash text-red-400 w-4 h-4"></i>
+                            </div>
+                            <span class="text-neutral-400 text-sm">Endpoint self-destructs when the timer runs out</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-lg border border-white border-opacity-7 bg-white bg-opacity-3 flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-sparkles text-lime-400 w-4 h-4"></i>
+                            </div>
+                            <span class="text-neutral-400 text-sm">Gemini generates realistic, typed mock responses</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Code Block -->
+                <div class="code-block animate-slide-in-right">
+                    <div class="flex items-center justify-between px-4 py-3 border-b border-orange-500 border-opacity-15">
+                        <div class="flex gap-2">
+                            <div class="w-3 h-3 rounded-full bg-orange-500 bg-opacity-80"></div>
+                            <div class="w-3 h-3 rounded-full bg-yellow-500 bg-opacity-80"></div>
+                            <div class="w-3 h-3 rounded-full bg-lime-500 bg-opacity-80"></div>
+                        </div>
+                        <span class="text-neutral-600 text-xs font-mono">bob-example.ts</span>
+                        <button onclick="copyCode()" class="flex items-center gap-1.5 text-neutral-600 hover:text-orange-400 transition-colors text-xs" id="copyBtn">
+                            <i class="fas fa-copy w-3.5 h-3.5"></i>
+                            Copy
+                        </button>
+                    </div>
+
+                    <div class="p-5 font-mono text-sm leading-relaxed overflow-x-auto" id="codeContent">
+                        <div class="code-line text-neutral-500">// Describe your backend in plain English</div>
+                        <div class="code-line text-orange-400">const spec = {</div>
+                        <div class="code-line text-lime-400">&nbsp;&nbsp;description: "A REST API for a todo app",</div>
+                        <div class="code-line text-orange-400">&nbsp;&nbsp;endpoints: [</div>
+                        <div class="code-line text-lime-400">&nbsp;&nbsp;&nbsp;&nbsp;"GET /todos - list all todos",</div>
+                        <div class="code-line text-lime-400">&nbsp;&nbsp;&nbsp;&nbsp;"POST /todos - create a new todo",</div>
+                        <div class="code-line text-lime-400">&nbsp;&nbsp;&nbsp;&nbsp;"DELETE /todos/:id - remove a todo"</div>
+                        <div class="code-line text-orange-400">&nbsp;&nbsp;],</div>
+                        <div class="code-line text-orange-300">&nbsp;&nbsp;auth: false,</div>
+                        <div class="code-line text-orange-300">&nbsp;&nbsp;mockData: true,</div>
+                        <div class="code-line text-orange-400">};</div>
+                        <div class="code-line text-neutral-500"></div>
+                        <div class="code-line text-neutral-500">// Bob builds it instantly with Gemini AI</div>
+                        <div class="code-line text-orange-400">const { baseUrl, expiresIn } = await bob.build(spec);</div>
+                        <div class="code-line text-orange-400">console.log(baseUrl);</div>
+                        <div class="code-line text-amber-300">// → https://api.bob.build/r/x7k2p</div>
+                        <div class="code-line text-amber-300">// → Expires in: 30 minutes</div>
+                    </div>
+
+                    <div class="flex items-center gap-2 px-5 py-3 border-t border-orange-500 border-opacity-15 bg-neutral-950 bg-opacity-50">
+                        <span class="relative flex h-2 w-2">
+                            <span class="animate-pulse-glow absolute inline-flex h-full w-full rounded-full bg-lime-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-2 w-2 bg-lime-500"></span>
+                        </span>
+                        <span class="text-neutral-500 text-xs font-mono">
+                            Endpoint live · Expires in <span class="text-lime-400">28:43</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Use Cases Section -->
+    <section class="relative py-32 px-6 border-t border-white border-opacity-5">
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-16 animate-fade-in-up">
+                <span class="text-xs font-black uppercase tracking-[0.25em] text-orange-500">
+                    Use Cases
+                </span>
+                <h2 class="text-4xl md:text-5xl font-black text-white mt-3 mb-4 tracking-tight">
+                    Built for every stage
+                </h2>
+            </div>
+
+            <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="use-case-card animate-fade-in-up">
+                    <div class="text-3xl mb-4">🎨</div>
+                    <h3 class="text-white font-bold text-lg mb-2">Frontend Devs</h3>
+                    <p class="text-neutral-500 text-sm leading-relaxed">Prototype without waiting for the backend team. Wire up real HTTP calls in minutes.</p>
+                </div>
+                <div class="use-case-card animate-fade-in-up" style="animation-delay: 0.1s;">
+                    <div class="text-3xl mb-4">⚡</div>
+                    <h3 class="text-white font-bold text-lg mb-2">Hackathons</h3>
+                    <p class="text-neutral-500 text-sm leading-relaxed">Ship a working product in hours. Temporary infra that matches your hackathon timeline.</p>
+                </div>
+                <div class="use-case-card animate-fade-in-up" style="animation-delay: 0.2s;">
+                    <div class="text-3xl mb-4">🧪</div>
+                    <h3 class="text-white font-bold text-lg mb-2">QA & Testing</h3>
+                    <p class="text-neutral-500 text-sm leading-relaxed">Create ephemeral test environments that are identical and disposable every run.</p>
+                </div>
+                <div class="use-case-card animate-fade-in-up" style="animation-delay: 0.3s;">
+                    <div class="text-3xl mb-4">📚</div>
+                    <h3 class="text-white font-bold text-lg mb-2">Tutorials</h3>
+                    <p class="text-neutral-500 text-sm leading-relaxed">Give students a real API to practice against without cloud setup or accounts.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="relative py-40 px-6 overflow-hidden border-t border-white border-opacity-5">
+        <!-- Big orange glow -->
+        <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div class="w-[1000px] h-[700px] rounded-full"
+                style="background: radial-gradient(ellipse, rgba(249, 115, 22, 0.14) 0%, transparent 65%); filter: blur(60px);"></div>
+        </div>
+        <div class="absolute top-0 left-0 right-0 h-px"
+            style="background: linear-gradient(90deg, transparent, rgba(249, 115, 22, 0.5), transparent);"></div>
+
+        <div class="relative max-w-4xl mx-auto text-center animate-scale-in">
+            <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold mb-8"
+                style="border: 1px solid rgba(249, 115, 22, 0.35); background: rgba(249, 115, 22, 0.1); color: #fb923c;">
+                <i class="fas fa-sparkles text-xs"></i>
+                No signup required
+            </div>
+
+            <h2 class="text-5xl md:text-7xl font-black text-white tracking-tight leading-tight mb-6">
+                Stop waiting for<br>
+                <span class="text-gradient-orange">the backend.</span>
+            </h2>
+
+            <p class="text-neutral-500 text-xl max-w-xl mx-auto mb-12 leading-relaxed">
+                Describe what you need. Bob builds it. You ship faster.
+                The rest disappears on its own.
+            </p>
+
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <button onclick="openSignupModal()" class="flex items-center gap-3 px-8 py-4 rounded-2xl text-black font-black text-lg bg-gradient-orange hover:opacity-90 transition-all glow-orange">
+                    <i class="fas fa-wrench"></i>
+                    Build Your First API
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+                <a href="https://github.com" target="_blank" class="flex items-center gap-2 text-sm font-semibold text-neutral-500 hover:text-orange-400 transition-colors">
+                    <i class="fas fa-external-link-alt"></i>
+                    View on GitHub
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="px-6 py-8 border-t border-white border-opacity-5">
+        <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-2.5">
+                <div class="bg-gradient-orange w-6 h-6 rounded-md flex items-center justify-center">
+                    <i class="fas fa-hard-hat text-black text-xs"></i>
+                </div>
+                <span class="font-black text-white text-sm">
+                    Bob <span class="text-orange-400">the Builder</span>
+                </span>
+            </div>
+            <span class="text-neutral-700 text-xs">
+                Ephemeral backends. Real endpoints. Zero cleanup.
+            </span>
+            <div class="flex items-center gap-1.5 text-neutral-600 text-xs">
+                <div class="footer-indicator"></div>
+                <span class="ml-1">All systems operational</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Signup Modal -->
+    <div id="signupModal" class="fixed inset-0 z-[200] hidden">
+        <div onclick="closeSignupModal()" class="modal-backdrop fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm"></div>
+
+        <div class="modal-content fixed z-[201] inset-0 flex items-center justify-center px-4" onclick="event.stopPropagation()">
+            <div class="relative w-full max-w-md rounded-3xl overflow-hidden"
+                style="background: #0e0e0e; border: 1px solid rgba(249, 115, 22, 0.25);">
+
+                <!-- Top glow bar -->
+                <div class="absolute top-0 left-0 right-0 h-px"
+                    style="background: linear-gradient(90deg, transparent, rgba(249, 115, 22, 0.7), transparent);"></div>
+
+                <!-- Close -->
+                <button onclick="closeSignupModal()"
+                    class="absolute top-4 right-4 w-8 h-8 rounded-lg flex items-center justify-center text-neutral-600 hover:text-neutral-300 hover:bg-white hover:bg-opacity-5 transition-all">
+                    <i class="fas fa-times w-4 h-4"></i>
+                </button>
+
+                <div class="p-8">
+                    <!-- Logo -->
+                    <div class="flex items-center gap-2.5 mb-7">
+                        <div class="bg-gradient-orange w-8 h-8 rounded-lg flex items-center justify-center relative">
+                            <i class="fas fa-hard-hat text-black text-sm"></i>
+                            <div class="absolute inset-0 rounded-lg blur-md opacity-60 bg-gradient-orange"></div>
+                        </div>
+                        <span class="font-black text-white text-lg tracking-tight">
+                            Bob <span class="text-orange-400">the Builder</span>
+                        </span>
+                    </div>
+
+                    <!-- Tab switcher -->
+                    <div class="flex rounded-xl p-1 mb-7" style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.07);">
+                        <button onclick="switchTab('signup')" class="flex-1 py-2 rounded-lg text-sm font-bold capitalize transition-all bg-gradient-orange text-black"
+                            id="signupTab">
+                            Sign up
+                        </button>
+                        <button onclick="switchTab('login')" class="flex-1 py-2 rounded-lg text-sm font-bold capitalize transition-all text-neutral-600"
+                            id="loginTab">
+                            Log in
+                        </button>
+                    </div>
+
+                    <!-- Heading -->
+                    <h2 class="text-2xl font-black text-white mb-1 tracking-tight" id="modalTitle">
+                        Create your account
+                    </h2>
+                    <p class="text-neutral-500 text-sm mb-7" id="modalSubtitle">
+                        Start building ephemeral APIs in seconds.
+                    </p>
+
+                    <!-- Form -->
+                    <form id="signupForm" onsubmit="handleSubmit(event)" class="space-y-4">
+                        <!-- Name Field (signup only) -->
+                        <div id="nameField" class="relative">
+                            <i class="fas fa-user absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-600"></i>
+                            <input type="text" placeholder="Full name" class="input-field w-full pl-10 pr-4"
+                                id="nameInput">
+                        </div>
+
+                        <!-- Email Field -->
+                        <div class="relative">
+                            <i class="fas fa-envelope absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-600"></i>
+                            <input type="email" placeholder="Email address" required class="input-field w-full pl-10 pr-4"
+                                id="emailInput">
+                        </div>
+
+                        <!-- Password Field -->
+                        <div class="relative">
+                            <i class="fas fa-lock absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-600"></i>
+                            <input type="password" placeholder="Password" required minlength="8" class="input-field w-full pl-10 pr-10"
+                                id="passwordInput">
+                            <button type="button" onclick="togglePassword()"
+                                class="absolute right-3.5 top-1/2 -translate-y-1/2 text-neutral-600 hover:text-neutral-400 transition-colors">
+                                <i class="fas fa-eye w-4 h-4" id="eyeIcon"></i>
+                            </button>
+                        </div>
+
+                        <!-- Forgot Password (login only) -->
+                        <div id="forgotField" class="text-right hidden">
+                            <button type="button" class="text-xs text-neutral-600 hover:text-orange-400 transition-colors">
+                                Forgot password?
+                            </button>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <button type="submit" class="w-full flex items-center justify-center gap-2.5 py-3.5 rounded-xl text-black font-black text-sm bg-gradient-orange hover:opacity-90 transition-all glow-orange"
+                            id="submitBtn">
+                            <i class="fas fa-wrench"></i>
+                            <span id="submitBtnText">Create Account</span>
+                            <i class="fas fa-arrow-right"></i>
+                        </button>
+
+                        <!-- Terms (signup only) -->
+                        <p id="termsField" class="text-center text-xs text-neutral-600">
+                            By signing up, you agree to our
+                            <button type="button" class="text-orange-500 hover:text-orange-400 transition-colors underline underline-offset-2">
+                                Terms
+                            </button>
+                            and
+                            <button type="button" class="text-orange-500 hover:text-orange-400 transition-colors underline underline-offset-2">
+                                Privacy Policy
+                            </button>.
+                        </p>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
-        const form = document.getElementById('aiForm');
-        const logs = document.getElementById('logs');
-        const terminal = document.getElementById('terminal');
-        const buildTimer = document.getElementById('buildTimer');
-        const buildTimerValue = document.getElementById('buildTimerValue');
-        let buildTimerInterval = null;
+        // Counter Animation
+        function animateCounters() {
+            const counters = document.querySelectorAll('.counter');
+            counters.forEach(counter => {
+                const target = parseInt(counter.dataset.target);
+                const increment = target / 45;
+                let current = 0;
 
-        function formatDuration(ms) {
-            const safe = Math.max(0, Math.floor(ms / 1000));
-            const hours = Math.floor(safe / 3600);
-            const minutes = Math.floor((safe % 3600) / 60);
-            const seconds = safe % 60;
-            return [hours, minutes, seconds].map((v) => String(v).padStart(2, '0')).join(':');
+                const updateCounter = () => {
+                    current += increment;
+                    if (current < target) {
+                        counter.textContent = Math.floor(current);
+                        setTimeout(updateCounter, 40);
+                    } else {
+                        counter.textContent = target;
+                    }
+                };
+
+                const observer = new IntersectionObserver(entries => {
+                    if (entries[0].isIntersecting) {
+                        updateCounter();
+                        observer.disconnect();
+                    }
+                }, { threshold: 0.5 });
+
+                observer.observe(counter);
+            });
         }
 
-        function stopBuildTimer() {
-            if (buildTimerInterval) {
-                clearInterval(buildTimerInterval);
-                buildTimerInterval = null;
+        // Modal Functions
+        function openSignupModal() {
+            document.getElementById('signupModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeSignupModal() {
+            document.getElementById('signupModal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        function switchTab(tab) {
+            const signupTab = document.getElementById('signupTab');
+            const loginTab = document.getElementById('loginTab');
+            const nameField = document.getElementById('nameField');
+            const forgotField = document.getElementById('forgotField');
+            const termsField = document.getElementById('termsField');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalSubtitle = document.getElementById('modalSubtitle');
+            const submitBtnText = document.getElementById('submitBtnText');
+
+            if (tab === 'signup') {
+                signupTab.classList.add('bg-gradient-orange', 'text-black');
+                signupTab.classList.remove('text-neutral-600');
+                loginTab.classList.remove('bg-gradient-orange', 'text-black');
+                loginTab.classList.add('text-neutral-600');
+                nameField.classList.remove('hidden');
+                forgotField.classList.add('hidden');
+                termsField.classList.remove('hidden');
+                modalTitle.textContent = 'Create your account';
+                modalSubtitle.textContent = 'Start building ephemeral APIs in seconds.';
+                submitBtnText.textContent = 'Create Account';
+                document.getElementById('nameInput').required = true;
+            } else {
+                loginTab.classList.add('bg-gradient-orange', 'text-black');
+                loginTab.classList.remove('text-neutral-600');
+                signupTab.classList.remove('bg-gradient-orange', 'text-black');
+                signupTab.classList.add('text-neutral-600');
+                nameField.classList.add('hidden');
+                forgotField.classList.remove('hidden');
+                termsField.classList.add('hidden');
+                modalTitle.textContent = 'Welcome back';
+                modalSubtitle.textContent = 'Log back in to your workspace.';
+                submitBtnText.textContent = 'Log In';
+                document.getElementById('nameInput').required = false;
             }
         }
 
-        function startBuildTimer(expiresAt) {
-            stopBuildTimer();
-            const expiresAtMs = new Date(expiresAt).getTime();
-            if (!expiresAt || Number.isNaN(expiresAtMs)) {
-                buildTimer.classList.add('hidden');
-                buildTimerValue.textContent = '--:--:--';
-                return;
+        function togglePassword() {
+            const passwordInput = document.getElementById('passwordInput');
+            const eyeIcon = document.getElementById('eyeIcon');
+
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                eyeIcon.classList.remove('fa-eye');
+                eyeIcon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                eyeIcon.classList.add('fa-eye');
+                eyeIcon.classList.remove('fa-eye-slash');
             }
-
-            buildTimer.classList.remove('hidden');
-            const tick = () => {
-                const remainingMs = expiresAtMs - Date.now();
-                buildTimerValue.textContent = formatDuration(remainingMs);
-                if (remainingMs <= 0) {
-                    stopBuildTimer();
-                }
-            };
-
-            tick();
-            buildTimerInterval = setInterval(tick, 1000);
         }
 
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const prompt = document.getElementById('promptInput').value;
-            if (!prompt) return;
+        function handleSubmit(event) {
+            event.preventDefault();
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
 
-            terminal.classList.remove('hidden');
-            log(`user@host:~$ ${prompt}`);
-            log('> Analyzing request with Gemini AI...', 'text-yellow-500');
+            setTimeout(() => {
+                closeSignupModal();
+                submitBtn.disabled = false;
+            }, 1500);
+        }
 
-            try {
-                const res = await fetch('/ai/build', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt })
-                });
-                const data = await res.json();
+        // Copy Code
+        function copyCode() {
+            const codeContent = document.getElementById('codeContent').innerText;
+            navigator.clipboard.writeText(codeContent);
 
-                if (data.success) {
-                    const serviceType = data.data.serviceType || 'crud_api';
-                    const generated = data.data.generatedProject;
-                    const liveApi = data.data.liveApi;
-                    const accessToken = data.data.accessToken;
+            const copyBtn = document.getElementById('copyBtn');
+            const originalText = copyBtn.innerHTML;
+            copyBtn.innerHTML = '<i class="fas fa-check w-3.5 h-3.5"></i>Copied!';
 
-                    log(`> [AI]: ${data.aiResponse}`, 'text-blue-400');
-                    log('> --------------------------------', 'text-gray-600');
-                    log('> BACKEND SCAFFOLD GENERATED', 'text-green-500 font-bold');
-                    log(`> SERVICE ID: <span class="text-white">${data.data.serviceId}</span>`);
-                    log(`> SERVICE TYPE: <span class="text-white">${serviceType}</span>`);
-                    log(`> ACCESS TOKEN: <span class="text-white">${accessToken}</span>`);
-                    log(`> EXPIRES AT: ${new Date(data.data.expiresAt).toLocaleTimeString()}`);
-                    startBuildTimer(data.data.expiresAt);
-                    log(`> LIVE META: <span class="text-white">${liveApi.meta}</span>`);
-                    (liveApi.endpoints || []).slice(0, 8).forEach((endpoint) => {
-                        log(`> LIVE API: ${endpoint.method} ${endpoint.path}`, 'text-emerald-300');
-                    });
-                    log(`> PROJECT PATH: <span class="text-white">${generated.path}</span>`);
-                    log(`> OPENAPI: <span class="text-white">${generated.openApiPath}</span>`);
-                    log(`> RUN: <span class="text-white">${generated.runCommand}</span>`);
-                    (generated.endpoints || []).slice(0, 8).forEach((endpoint) => {
-                        log(`> ENDPOINT: ${endpoint.method} ${endpoint.path}`, 'text-cyan-300');
-                    });
-                    log(`> <a href="/dashboard.html?id=${data.data.serviceId}&token=${accessToken}" target="_blank" class="text-yellow-400 underline hover:text-yellow-300 font-bold">OPEN LIVE DASHBOARD</a>`);
-                } else {
-                    log(`> Error: ${data.error}`, 'text-red-500');
-                }
-            } catch (err) {
-                log('> Connection failed.', 'text-red-500');
-            }
+            setTimeout(() => {
+                copyBtn.innerHTML = originalText;
+            }, 2000);
+        }
+
+        // Close modal on escape key
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') closeSignupModal();
         });
 
-        function log(msg, colorClass = 'text-gray-300') {
-            const div = document.createElement('div');
-            div.innerHTML = msg;
-            div.className = `${colorClass} break-words`;
-            logs.appendChild(div);
-            logs.scrollTop = logs.scrollHeight;
-        }
-
+        // Initialize
+        document.addEventListener('DOMContentLoaded', animateCounters);
     </script>
 </body>
 </html>
