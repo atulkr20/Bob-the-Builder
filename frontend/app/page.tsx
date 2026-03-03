@@ -213,149 +213,7 @@ function ScanLine() {
   );
 }
 
-/* ─── Signup Modal ─── */
-function SignupModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
-  const [activeTab, setActiveTab] = useState<"signup" | "signin">("signup");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [submitted, setSubmitted] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setSubmitted(true);
-    setTimeout(() => {
-      setSubmitted(false);
-      onClose();
-    }, 2000);
-  };
-
-  return (
-    <AnimatePresence>
-      {isOpen && (
-        <>
-          {/* Backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={onClose}
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100]"
-          />
-
-          {/* Modal */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            transition={{ type: "spring", damping: 25 }}
-            className="fixed inset-0 flex items-center justify-center z-[101] p-4"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div
-              className="relative w-full max-w-md rounded-3xl overflow-hidden border"
-              style={{
-                background: "rgba(12,12,12,0.98)",
-                borderColor: "rgba(249,115,22,0.2)",
-              }}
-            >
-              {/* Close button */}
-              <button
-                onClick={onClose}
-                className="absolute top-4 right-4 z-10 p-2 rounded-xl hover:bg-white/10 transition-colors"
-              >
-                <X className="w-5 h-5 text-neutral-400" />
-              </button>
-
-              {/* Header */}
-              <div className="p-8 pb-6 text-center">
-                <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl mb-4" style={{ background: "linear-gradient(135deg, #f97316, #eab308)" }}>
-                  <HardHat className="w-6 h-6 text-black" />
-                </div>
-                <h2 className="text-2xl font-black text-white mb-2">
-                  {activeTab === "signup" ? "Start Building" : "Welcome Back"}
-                </h2>
-                <p className="text-neutral-500 text-sm">
-                  {activeTab === "signup" ? "Create your free account" : "Sign in to continue"}
-                </p>
-              </div>
-
-              {/* Tabs */}
-              <div className="flex gap-2 px-8 mb-6">
-                {(["signup", "signin"] as const).map((tab) => (
-                  <button
-                    key={tab}
-                    onClick={() => setActiveTab(tab)}
-                    className={`flex-1 py-2.5 rounded-xl font-semibold text-sm transition-all ${
-                      activeTab === tab
-                        ? "bg-gradient-to-r from-orange-500 to-amber-500 text-black"
-                        : "bg-white/5 text-neutral-400 hover:bg-white/10"
-                    }`}
-                  >
-                    {tab === "signup" ? "Sign Up" : "Sign In"}
-                  </button>
-                ))}
-              </div>
-
-              {/* Form */}
-              {submitted ? (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="p-8 pt-4 pb-12 text-center"
-                >
-                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-500/20 mb-4">
-                    <Check className="w-8 h-8 text-green-400" />
-                  </div>
-                  <h3 className="text-xl font-bold text-white mb-2">All set!</h3>
-                  <p className="text-neutral-500 text-sm">Redirecting you to dashboard...</p>
-                </motion.div>
-              ) : (
-                <form onSubmit={handleSubmit} className="p-8 pt-0 pb-8 space-y-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-neutral-400 mb-2">Email</label>
-                    <input
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                      placeholder="you@example.com"
-                      className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-neutral-600 focus:outline-none focus:border-orange-500/50 transition-colors"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-neutral-400 mb-2">Password</label>
-                    <input
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                      placeholder="••••••••"
-                      className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-neutral-600 focus:outline-none focus:border-orange-500/50 transition-colors"
-                    />
-                  </div>
-
-                  <motion.button
-                    type="submit"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="w-full py-3.5 rounded-xl font-bold text-black mt-6"
-                    style={{ background: "linear-gradient(135deg, #f97316, #eab308)" }}
-                  >
-                    {activeTab === "signup" ? "Create Account" : "Sign In"}
-                  </motion.button>
-
-                  <p className="text-center text-xs text-neutral-600 mt-4">
-                    By continuing, you agree to our Terms & Privacy Policy
-                  </p>
-                </form>
-              )}
-            </div>
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>
-  );
-}
 
 /* ─── Main Page ─── */
 export default function Home() {
@@ -363,7 +221,6 @@ export default function Home() {
   const { scrollYProgress } = useScroll({ target: containerRef });
   const heroY = useTransform(scrollYProgress, [0, 0.3], [0, -80]);
   const heroOpacity = useTransform(scrollYProgress, [0, 0.25], [1, 0]);
-  const [signupOpen, setSignupOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
@@ -821,17 +678,18 @@ export default function Home() {
             <p className="text-neutral-500 text-xl max-w-xl mx-auto mb-12 leading-relaxed">Describe what you need. Bob builds it. You ship faster. The rest disappears on its own.</p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <motion.button
-                onClick={() => setSignupOpen(true)}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="flex items-center gap-3 px-8 py-4 rounded-2xl text-black font-black text-lg transition-all"
-                style={{ background: "linear-gradient(135deg, #f97316, #eab308)", boxShadow: "0 0 60px rgba(249,115,22,0.5), inset 0 1px 0 rgba(255,255,255,0.25)" }}
-              >
-                <Wrench className="w-5 h-5" />
-                Build Your First API
-                <ArrowRight className="w-5 h-5" />
-              </motion.button>
+              <Link href="/generator">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="flex items-center gap-3 px-8 py-4 rounded-2xl text-black font-black text-lg transition-all"
+                  style={{ background: "linear-gradient(135deg, #f97316, #eab308)", boxShadow: "0 0 60px rgba(249,115,22,0.5), inset 0 1px 0 rgba(255,255,255,0.25)" }}
+                >
+                  <Wrench className="w-5 h-5" />
+                  Build Your First API
+                  <ArrowRight className="w-5 h-5" />
+                </motion.button>
+              </Link>
               <motion.a
                 href="https://github.com"
                 target="_blank"
@@ -871,8 +729,7 @@ export default function Home() {
         </div>
       </footer>
 
-      {/* ── SIGNUP MODAL ── */}
-      <SignupModal isOpen={signupOpen} onClose={() => setSignupOpen(false)} />
+
     </div>
   );
 }
